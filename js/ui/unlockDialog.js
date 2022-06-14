@@ -20,7 +20,7 @@ const IDLE_TIMEOUT = 2 * 60;
 // The timeout before showing the unlock hint (in seconds)
 const HINT_TIMEOUT = 4;
 
-const CROSSFADE_TIME = 300;
+const CROSSFADE_TIME = 500;
 const FADE_OUT_TRANSLATION = 200;
 const FADE_OUT_SCALE = 0.3;
 

@@ -6,7 +6,7 @@ const Signals = imports.signals;
 
 // Time for initial animation going into Overview mode;
 // this is defined here to make it available in imports.
-var ANIMATION_TIME = 250;
+var ANIMATION_TIME = 500;
 
 const DND = imports.ui.dnd;
 const LayoutManager = imports.ui.layout;

@@ -6,7 +6,7 @@ const { Clutter, GLib, GObject, Gio, St } = imports.gi;
 const Params = imports.misc.params;
 
 var ANIMATED_ICON_UPDATE_TIMEOUT = 16;
-var SPINNER_ANIMATION_TIME = 300;
+var SPINNER_ANIMATION_TIME = 500;
 var SPINNER_ANIMATION_DELAY = 1000;
 
 var Animation = GObject.registerClass(

@@ -616,6 +616,7 @@ var Dash = GObject.registerClass({
         availHeight -= themeNode.get_vertical_padding();
         availHeight -= buttonHeight - iconHeight;
 
+        // console.log("avaiWidth = " + availWidth + " iconChildren.length = " + iconChildren.length + " availHeight = " + availHeight);
         const maxIconSize = Math.min(availWidth / iconChildren.length, availHeight);
 
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;

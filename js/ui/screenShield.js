@@ -33,8 +33,8 @@ const LOCKED_STATE_STR = 'screenShield.locked';
 //   or when cancelling the dialog
 // - CURTAIN_SLIDE_TIME is used when raising the shield before unlocking
 var STANDARD_FADE_TIME = 10000;
-var MANUAL_FADE_TIME = 300;
-var CURTAIN_SLIDE_TIME = 300;
+var MANUAL_FADE_TIME = 500;
+var CURTAIN_SLIDE_TIME = 500;
 
 /**
  * If you are setting org.gnome.desktop.session.idle-delay directly in dconf,

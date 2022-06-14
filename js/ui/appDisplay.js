@@ -22,7 +22,7 @@ const Params = imports.misc.params;
 const SystemActions = imports.misc.systemActions;
 
 var MENU_POPUP_TIMEOUT = 600;
-var POPDOWN_DIALOG_TIMEOUT = 500;
+var POPDOWN_DIALOG_TIMEOUT = 200;
 
 var FOLDER_SUBICON_FRACTION = .4;
 
@@ -37,9 +37,9 @@ var APP_ICON_SCALE_IN_DELAY = 700;
 var APP_ICON_TITLE_EXPAND_TIME = 200;
 var APP_ICON_TITLE_COLLAPSE_TIME = 100;
 
-const FOLDER_DIALOG_ANIMATION_TIME = 200;
+const FOLDER_DIALOG_ANIMATION_TIME = 400;
 
-const PAGE_PREVIEW_ANIMATION_TIME = 150;
+const PAGE_PREVIEW_ANIMATION_TIME = 500;
 const PAGE_PREVIEW_ANIMATION_START_OFFSET = 100;
 const PAGE_PREVIEW_FADE_EFFECT_MAX_OFFSET = 300;
 const PAGE_PREVIEW_MAX_ARROW_OFFSET = 80;
@@ -350,6 +350,8 @@ var BaseAppView = GObject.registerClass({
         this.connect('destroy', this._onDestroy.bind(this));
 
         this._previewedPages = new Map();
+
+        this.slideSidePagesReactionOnMotionEnabled = true;
     }
 
     _onDestroy() {
@@ -489,9 +491,13 @@ var BaseAppView = GObject.registerClass({
         return SidePages.NONE;
     }
 
+
     _onMotion(actor, event) {
+	    // console.log("onMotion()");
         const page = this._pageForCoords(...event.get_coords());
-        this._slideSidePages(page);
+
+	    if(this.slideSidePagesReactionOnMotionEnabled && !this._grid._is_switching_page)
+            this._slideSidePages(page);
 
         return Clutter.EVENT_PROPAGATE;
     }
@@ -505,7 +511,10 @@ var BaseAppView = GObject.registerClass({
     }
 
     _onLeave() {
-        this._slideSidePages(SidePages.NONE);
+	    // console.log("onLeave()");
+
+	    if(this.slideSidePagesReactionOnMotionEnabled && !this._grid._is_switching_page)
+            this._slideSidePages(SidePages.NONE);
     }
 
     _swipeBegin(tracker, monitor) {
@@ -694,16 +703,19 @@ var BaseAppView = GObject.registerClass({
     }
 
     _onDragBegin() {
+    //console.log("onDragBegin()");
         this._dragMonitor = {
             dragMotion: this._onDragMotion.bind(this),
         };
         DND.addDragMonitor(this._dragMonitor);
+        this.slideSidePagesReactionOnMotionEnabled = false;
         this._slideSidePages(SidePages.PREVIOUS | SidePages.NEXT | SidePages.DND);
         this._dragFocus = null;
         this._swipeTracker.enabled = false;
     }
 
     _onDragMotion(dragEvent) {
+	    //console.log("onDragMotion()");
         if (!(dragEvent.source instanceof AppViewItem))
             return DND.DragMotionResult.CONTINUE;
 
@@ -729,6 +741,7 @@ var BaseAppView = GObject.registerClass({
     }
 
     _onDragEnd() {
+	    //console.log("onDragEnd()");
         if (this._dragMonitor) {
             DND.removeDragMonitor(this._dragMonitor);
             this._dragMonitor = null;
@@ -736,15 +749,18 @@ var BaseAppView = GObject.registerClass({
 
         this._resetOvershoot();
         this._slideSidePages(SidePages.NONE);
+        this.slideSidePagesReactionOnMotionEnabled = true;
         delete this._dropPage;
         this._swipeTracker.enabled = true;
     }
 
     _onDragCancelled() {
+	    //console.log("onDragCancelled()");
         // At this point, the positions aren't stored yet, thus _redisplay()
         // will move all items to their original positions
         this._redisplay();
         this._slideSidePages(SidePages.NONE);
+        this.slideSidePagesReactionOnMotionEnabled = true;
         this._swipeTracker.enabled = true;
     }
 
@@ -1156,6 +1172,9 @@ var BaseAppView = GObject.registerClass({
     _syncClip() {
         const nextPageAdjustment = this._previewedPages.get(1);
         const prevPageAdjustment = this._previewedPages.get(-1);
+        /**
+        * Value clip_to_view = true might means it is available to clip the page to show preview
+        **/
         this._grid.clip_to_view =
             (!prevPageAdjustment || prevPageAdjustment.value === 0) &&
             (!nextPageAdjustment || nextPageAdjustment.value === 0);
@@ -1174,6 +1193,17 @@ var BaseAppView = GObject.registerClass({
         const indicator = page > 0
             ? this._nextPageIndicator : this._prevPageIndicator;
 
+        const nextPage = this._grid.currentPage + page;
+        const hasFollowingPage = nextPage >= 0 &&
+            nextPage < this._grid.nPages;
+
+        if (hasFollowingPage) {
+            // Initialize it
+            const items = this._grid.getItemsAtPage(nextPage);
+            items.forEach(item => {
+                item.translation_x = this._getIndicatorOffset(page, 0, 0);
+            });
+        }
         adjustment.connectObject('notify::value', () => {
             const nextPage = this._grid.currentPage + page;
             const hasFollowingPage = nextPage >= 0 &&
@@ -1203,6 +1233,8 @@ var BaseAppView = GObject.registerClass({
                 (page > 0 &&
                  this._grid.layout_manager.allow_incomplete_pages &&
                  (state & SidePages.DND) !== 0)) {
+                // TODO: indicator sometimes will be placed in a 
+                // wrong position.
                 indicator.set({
                     visible: true,
                     opacity: adjustment.value * 255,
@@ -1248,6 +1280,7 @@ var BaseAppView = GObject.registerClass({
 
         adjustment = this._previewedPages.get(1);
         if (showingNextPage) {
+            console.log("showing next page");
             adjustment = this._setupPagePreview(1, state);
 
             adjustment.ease(1, {
@@ -1256,6 +1289,7 @@ var BaseAppView = GObject.registerClass({
             });
             this._updateFadeForNavigation();
         } else if (adjustment) {
+            console.log("next - Adjustment");
             adjustment.ease(0, {
                 duration: PAGE_PREVIEW_ANIMATION_TIME,
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -1271,6 +1305,7 @@ var BaseAppView = GObject.registerClass({
 
         adjustment = this._previewedPages.get(-1);
         if (showingPrevPage) {
+            console.log("showing previous page");
             adjustment = this._setupPagePreview(-1, state);
 
             adjustment.ease(1, {
@@ -1279,6 +1314,7 @@ var BaseAppView = GObject.registerClass({
             });
             this._updateFadeForNavigation();
         } else if (adjustment) {
+            console.log("previous - Adjustment");
             adjustment.ease(0, {
                 duration: PAGE_PREVIEW_ANIMATION_TIME,
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -1291,6 +1327,7 @@ var BaseAppView = GObject.registerClass({
                 },
             });
         }
+
     }
 
     updateDragFocus(dragFocus) {
@@ -2017,6 +2054,7 @@ class AppViewItem extends St.Button {
             scale_x: 0.5,
             scale_y: 0.5,
             opacity: 0,
+            duration: 0 // Directly disappear
         });
     }
 
@@ -2330,8 +2368,11 @@ class FolderView extends BaseAppView {
     removeApp(app) {
         let folderApps = this._folder.get_strv('apps');
         let index = folderApps.indexOf(app.id);
-        if (index >= 0)
+        if (index >= 0) {
             folderApps.splice(index, 1);
+            
+            if(folderApps.length == 1) folderApps.splice(0, 1);
+        }
 
         // Remove the folder if this is the last app icon; otherwise,
         // just remove the icon
@@ -2700,13 +2741,13 @@ var AppFolderDialog = GObject.registerClass({
         to.reactive = true;
         to.ease({
             opacity: 255,
-            duration: 300,
+            duration: 500,
             mode: Clutter.AnimationMode.EASE_OUT_QUAD,
         });
 
         from.ease({
             opacity: 0,
-            duration: 300,
+            duration: 500,
             mode: Clutter.AnimationMode.EASE_OUT_QUAD,
             onComplete: () => {
                 from.reactive = false;
@@ -2955,6 +2996,8 @@ var AppFolderDialog = GObject.registerClass({
             GLib.timeout_add(GLib.PRIORITY_DEFAULT, POPDOWN_DIALOG_TIMEOUT, () => {
                 this._popdownTimeoutId = 0;
                 this.popdown();
+
+                // this._source._slideSidePages(SidePages.NONE);
                 return GLib.SOURCE_REMOVE;
             });
     }
@@ -3254,7 +3297,8 @@ var AppIcon = GObject.registerClass({
     }
 
     getDragActor() {
-        return this.app.create_icon_texture(Main.overview.dash.iconSize);
+        // return this.app.create_icon_texture(Main.overview.dash.iconSize);
+        return this.app.create_icon_texture(this.icon.iconSize);
     }
 
     // Returns the original actor that should align with the actor

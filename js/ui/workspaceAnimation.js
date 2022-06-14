@@ -8,7 +8,7 @@ const Layout = imports.ui.layout;
 const Main = imports.ui.main;
 const SwipeTracker = imports.ui.swipeTracker;
 
-const WINDOW_ANIMATION_TIME = 250;
+const WINDOW_ANIMATION_TIME = 500;
 const WORKSPACE_SPACING = 100;
 
 var WorkspaceGroup = GObject.registerClass(

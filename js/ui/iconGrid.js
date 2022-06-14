@@ -8,7 +8,7 @@ const Main = imports.ui.main;
 
 var ICON_SIZE = 96;
 
-var PAGE_SWITCH_TIME = 300;
+var PAGE_SWITCH_TIME = 500;
 
 var IconSize = {
     LARGE: 96,
@@ -1146,6 +1146,7 @@ var IconGrid = GObject.registerClass({
         this._gridModes = defaultGridModes;
         this._currentPage = 0;
         this._currentMode = -1;
+        this._is_switching_page = false;
 
         this.connect('actor-added', this._childAdded.bind(this));
         this.connect('actor-removed', this._childRemoved.bind(this));
@@ -1314,9 +1315,13 @@ var IconGrid = GObject.registerClass({
         if (!this.mapped)
             animate = false;
 
+        this._is_switching_page = true;
         adjustment.ease(newValue, {
             mode: Clutter.AnimationMode.EASE_OUT_CUBIC,
             duration: animate ? PAGE_SWITCH_TIME : 0,
+            onComplete: () => {
+                this._is_switching_page = false;
+            }
         });
     }
 

@@ -21,9 +21,9 @@ const WorkspaceAnimation = imports.ui.workspaceAnimation;
 const { loadInterfaceXML } = imports.misc.fileUtils;
 
 var SHELL_KEYBINDINGS_SCHEMA = 'org.gnome.shell.keybindings';
-var MINIMIZE_WINDOW_ANIMATION_TIME = 400;
+var MINIMIZE_WINDOW_ANIMATION_TIME = 1000;
 var MINIMIZE_WINDOW_ANIMATION_MODE = Clutter.AnimationMode.EASE_OUT_EXPO;
-var SHOW_WINDOW_ANIMATION_TIME = 150;
+var SHOW_WINDOW_ANIMATION_TIME = 500;
 var DIALOG_SHOW_WINDOW_ANIMATION_TIME = 100;
 var DESTROY_WINDOW_ANIMATION_TIME = 150;
 var DIALOG_DESTROY_WINDOW_ANIMATION_TIME = 100;
@@ -1486,8 +1486,10 @@ var WindowManager = class {
         switch (actor._windowType) {
         case Meta.WindowType.NORMAL:
             actor.set_pivot_point(0.5, 1.0);
-            actor.scale_x = 0.01;
-            actor.scale_y = 0.05;
+            /*actor.scale_x = 0.01;
+            actor.scale_y = 0.05;*/
+            actor.scale_x = 0.6;
+            actor.scale_y = 0.6;
             actor.opacity = 0;
             actor.show();
             this._mapping.add(actor);

@@ -11,8 +11,8 @@ const Workspace = imports.ui.workspace;
 
 const NUM_WORKSPACES_THRESHOLD = 2;
 
-// The maximum size of a thumbnail is 5% the width and height of the screen
-var MAX_THUMBNAIL_SCALE = 0.05;
+// The maximum size of a thumbnail is 10% the width and height of the screen
+var MAX_THUMBNAIL_SCALE = 0.1;
 
 var RESCALE_ANIMATION_TIME = 200;
 var SLIDE_ANIMATION_TIME = 200;

@@ -11,7 +11,7 @@ const Util = imports.misc.util;
 const Workspace = imports.ui.workspace;
 const { ThumbnailsBox, MAX_THUMBNAIL_SCALE } = imports.ui.workspaceThumbnail;
 
-var WORKSPACE_SWITCH_TIME = 250;
+var WORKSPACE_SWITCH_TIME = 500;
 
 const MUTTER_SCHEMA = 'org.gnome.mutter';
 
