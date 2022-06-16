@@ -12,7 +12,7 @@ const Main = imports.ui.main;
 const Params = imports.misc.params;
 const Ripples = imports.ui.ripples;
 
-var STARTUP_ANIMATION_TIME = 500;
+var STARTUP_ANIMATION_TIME = 1000;
 var BACKGROUND_FADE_ANIMATION_TIME = 1000;
 
 var HOT_CORNER_PRESSURE_THRESHOLD = 100; // pixels

@@ -352,6 +352,7 @@ var BaseAppView = GObject.registerClass({
         this._previewedPages = new Map();
 
         this.slideSidePagesReactionOnMotionEnabled = true;
+        this.isSlidingSidePages = false;
     }
 
     _onDestroy() {
@@ -590,12 +591,21 @@ var BaseAppView = GObject.registerClass({
         const [success, x, y] =
             this._grid.transform_stage_point(dragEvent.x, dragEvent.y);
 
+        /*
+        console.log("transform_stage_point() -> x = " + x + 
+            " y = " + y + " success = " + success);
+            */
+
         if (!success)
             return;
 
         const { source } = dragEvent;
         const [page, position, dragLocation] =
             this._getDropTarget(x, y, source);
+        /*
+        console.log("page = " + page + " position = " + position + 
+            " dragLocation = " + dragLocation);
+            */
         const item = position !== -1
             ? this._grid.getItemAt(page, position) : null;
 
@@ -1081,6 +1091,8 @@ var BaseAppView = GObject.registerClass({
     }
 
     goToPage(pageNumber, animate = true) {
+        if(this.isSlidingSidePages === true) return;
+
         pageNumber = Math.clamp(pageNumber, 0, this._grid.nPages - 1);
 
         if (this._grid.currentPage === pageNumber)
@@ -1280,16 +1292,21 @@ var BaseAppView = GObject.registerClass({
 
         adjustment = this._previewedPages.get(1);
         if (showingNextPage) {
-            console.log("showing next page");
+            // console.log("showing next page");
             adjustment = this._setupPagePreview(1, state);
 
+            this.isSlidingSidePages = true;
             adjustment.ease(1, {
                 duration: PAGE_PREVIEW_ANIMATION_TIME,
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                onComplete: () => {
+                    this.isSlidingSidePages = false;
+                }
             });
             this._updateFadeForNavigation();
         } else if (adjustment) {
-            console.log("next - Adjustment");
+            // console.log("next - Adjustment");
+            this.isSlidingSidePages = true;
             adjustment.ease(0, {
                 duration: PAGE_PREVIEW_ANIMATION_TIME,
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -1299,22 +1316,29 @@ var BaseAppView = GObject.registerClass({
                     this._nextPageArrow.visible = false;
                     this._nextPageIndicator.visible = false;
                     this._updateFadeForNavigation();
+
+                    this.isSlidingSidePages = false;
                 },
             });
         }
 
         adjustment = this._previewedPages.get(-1);
         if (showingPrevPage) {
-            console.log("showing previous page");
+            // console.log("showing previous page");
             adjustment = this._setupPagePreview(-1, state);
 
+            this.isSlidingSidePages = true;
             adjustment.ease(1, {
                 duration: PAGE_PREVIEW_ANIMATION_TIME,
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                onComplete: () => {
+                    this.isSlidingSidePages = false;
+                }
             });
             this._updateFadeForNavigation();
         } else if (adjustment) {
-            console.log("previous - Adjustment");
+            // console.log("previous - Adjustment");
+            this.isSlidingSidePages = true;
             adjustment.ease(0, {
                 duration: PAGE_PREVIEW_ANIMATION_TIME,
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -1324,6 +1348,8 @@ var BaseAppView = GObject.registerClass({
                     this._prevPageArrow.visible = false;
                     this._prevPageIndicator.visible = false;
                     this._updateFadeForNavigation();
+
+                    this.isSlidingSidePages = false;
                 },
             });
         }
