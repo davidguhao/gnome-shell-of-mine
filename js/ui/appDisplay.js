@@ -3346,7 +3346,7 @@ var AppIcon = GObject.registerClass({
                 return;
 
             this._folderPreviewId =
-                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 0, () => {
                     this.add_style_pseudo_class('drop');
                     this._showFolderPreview();
                     this._folderPreviewId = 0;
