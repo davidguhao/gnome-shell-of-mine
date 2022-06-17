@@ -22,7 +22,7 @@ const Params = imports.misc.params;
 const SystemActions = imports.misc.systemActions;
 
 var MENU_POPUP_TIMEOUT = 600;
-var POPDOWN_DIALOG_TIMEOUT = 200;
+var POPDOWN_DIALOG_TIMEOUT = 500;
 
 var FOLDER_SUBICON_FRACTION = .4;
 
@@ -39,7 +39,7 @@ var APP_ICON_TITLE_COLLAPSE_TIME = 100;
 
 const FOLDER_DIALOG_ANIMATION_TIME = 400;
 
-const PAGE_PREVIEW_ANIMATION_TIME = 500;
+const PAGE_PREVIEW_ANIMATION_TIME = 200;
 const PAGE_PREVIEW_ANIMATION_START_OFFSET = 100;
 const PAGE_PREVIEW_FADE_EFFECT_MAX_OFFSET = 300;
 const PAGE_PREVIEW_MAX_ARROW_OFFSET = 80;
@@ -3020,10 +3020,11 @@ var AppFolderDialog = GObject.registerClass({
 
         this._popdownTimeoutId =
             GLib.timeout_add(GLib.PRIORITY_DEFAULT, POPDOWN_DIALOG_TIMEOUT, () => {
+                // this._source._slideSidePages(SidePages.NONE);
+
                 this._popdownTimeoutId = 0;
                 this.popdown();
 
-                // this._source._slideSidePages(SidePages.NONE);
                 return GLib.SOURCE_REMOVE;
             });
     }
@@ -3080,6 +3081,8 @@ var AppFolderDialog = GObject.registerClass({
     }
 
     popdown(callback) {
+        if(this.isSlidingSidePages === true) return;
+
         // Either call the callback right away, or wait for the zoom out
         // animation to finish
         if (callback) {
