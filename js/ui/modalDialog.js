@@ -9,7 +9,7 @@ const Lightbox = imports.ui.lightbox;
 const Main = imports.ui.main;
 const Params = imports.misc.params;
 
-var OPEN_AND_CLOSE_TIME = 100;
+var OPEN_AND_CLOSE_TIME = 500;
 var FADE_OUT_DIALOG_TIME = 1000;
 
 var State = {
