@@ -491,6 +491,8 @@ class ControlsManager extends St.Widget {
             () => this._shiftState(Meta.MotionDirection.DOWN));
 
         this._update();
+
+        this._shiftStateTimeoutId = 0;
     }
 
     _getFitModeForState(state) {
@@ -657,6 +659,9 @@ class ControlsManager extends St.Widget {
         }
     }
 
+    /**
+    * This method will handle the double click of the Super button
+    **/
     _shiftState(direction) {
         let { currentState, finalState } = this._stateAdjustment.getStateTransitionParams();
 
@@ -674,14 +679,29 @@ class ControlsManager extends St.Widget {
         } else if (finalState === ControlsState.HIDDEN) {
             Main.overview.hide();
         } else {
-            this._stateAdjustment.ease(finalState, {
-                duration: SIDE_CONTROLS_ANIMATION_TIME,
-                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                onComplete: () => {
-                    this.dash.showAppsButton.checked =
-                        finalState === ControlsState.APP_GRID;
-                },
-            });
+            this._shiftStateTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT,
+                SIDE_CONTROLS_ANIMATION_TIME, () => {
+                    this._stateAdjustment.ease(finalState, {
+                        duration: SIDE_CONTROLS_ANIMATION_TIME / 2,
+                        mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                        onComplete: () => {
+                            this.dash.showAppsButton.checked =
+                                finalState === ControlsState.APP_GRID;
+                        },
+                    });
+
+                    this._shiftStateTimeoutId = 0;
+                    return GLib.SOURCE_REMOVE;
+                });
+        }
+    }
+
+    _onDestroy() {
+        super._onDestroy();
+
+        if(this._shiftStateTimeoutId != 0) {
+            GLib.source_remove(this._shiftStateTimeoutId);
+            this._shiftStateTimeoutId = 0;
         }
     }
 
