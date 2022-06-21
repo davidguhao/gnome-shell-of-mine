@@ -22,7 +22,7 @@ var IconSize = {
 var APPICON_ANIMATION_OUT_SCALE = 3;
 var APPICON_ANIMATION_OUT_TIME = 250;
 
-const ICON_POSITION_DELAY = 10;
+const ICON_POSITION_DELAY = 20;
 
 const defaultGridModes = [
     {

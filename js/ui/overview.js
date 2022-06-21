@@ -249,6 +249,7 @@ var Overview = class {
     }
 
     _onDragBegin() {
+        console.log("_onDragBegin");
         this._inXdndDrag = true;
 
         DND.addDragMonitor(this._dragMonitor);
@@ -258,6 +259,7 @@ var Overview = class {
     }
 
     _onDragEnd() {
+        console.log("_onDragEnd");
         this._inXdndDrag = false;
 
         // In case the drag was canceled while in the overview
@@ -283,6 +285,7 @@ var Overview = class {
     }
 
     _onDragMotion(dragEvent) {
+        console.log("_onDragMotion");
         let targetIsWindow = dragEvent.targetActor &&
                              dragEvent.targetActor._delegate &&
                              dragEvent.targetActor._delegate.metaWindow &&

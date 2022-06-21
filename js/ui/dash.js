@@ -36,6 +36,7 @@ class DashIcon extends AppDisplay.AppIcon {
     }
 
     // Disable scale-n-fade methods used during DND by parent
+    /*
     scaleAndFade() {
     }
 
@@ -49,6 +50,7 @@ class DashIcon extends AppDisplay.AppIcon {
     acceptDrop() {
         return false;
     }
+    */
 });
 
 // A container like StBin, but taking the child's scale into account

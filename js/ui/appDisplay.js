@@ -49,10 +49,15 @@ const MAX_PAGE_PADDING = 200;
 const OVERSHOOT_THRESHOLD = 20;
 const OVERSHOOT_TIMEOUT = 400;
 
-const DELAYED_MOVE_TIMEOUT = 200;
 
 const DIALOG_SHADE_NORMAL = Clutter.Color.from_pixel(0x000000cc);
 const DIALOG_SHADE_HIGHLIGHT = Clutter.Color.from_pixel(0x00000055);
+
+/*
+    It means how long the time will be to let the folder preview be shown.
+    And the folder preview is going to be shown when you drag an app on another app.
+*/
+const FOLDER_PREVIEW_SHOWN_DELAYED = 700;
 
 const DEFAULT_FOLDERS = {
     'Utilities': {
@@ -591,21 +596,13 @@ var BaseAppView = GObject.registerClass({
         const [success, x, y] =
             this._grid.transform_stage_point(dragEvent.x, dragEvent.y);
 
-        /*
-        console.log("transform_stage_point() -> x = " + x + 
-            " y = " + y + " success = " + success);
-            */
-
         if (!success)
             return;
 
         const { source } = dragEvent;
         const [page, position, dragLocation] =
             this._getDropTarget(x, y, source);
-        /*
-        console.log("page = " + page + " position = " + position + 
-            " dragLocation = " + dragLocation);
-            */
+
         const item = position !== -1
             ? this._grid.getItemAt(page, position) : null;
 
@@ -629,7 +626,7 @@ var BaseAppView = GObject.registerClass({
                 source,
                 destroyId: source.connect('destroy', () => this._removeDelayedMove()),
                 timeoutId: GLib.timeout_add(GLib.PRIORITY_DEFAULT,
-                    DELAYED_MOVE_TIMEOUT, () => {
+                    DND.DELAYED_MOVE_TIMEOUT, () => {
                         this._moveItem(source, page, position);
                         this._delayedMoveData.timeoutId = 0;
                         this._removeDelayedMove();
@@ -713,7 +710,6 @@ var BaseAppView = GObject.registerClass({
     }
 
     _onDragBegin() {
-    //console.log("onDragBegin()");
         this._dragMonitor = {
             dragMotion: this._onDragMotion.bind(this),
         };
@@ -725,7 +721,6 @@ var BaseAppView = GObject.registerClass({
     }
 
     _onDragMotion(dragEvent) {
-	    //console.log("onDragMotion()");
         if (!(dragEvent.source instanceof AppViewItem))
             return DND.DragMotionResult.CONTINUE;
 
@@ -751,12 +746,12 @@ var BaseAppView = GObject.registerClass({
     }
 
     _onDragEnd() {
-	    //console.log("onDragEnd()");
         if (this._dragMonitor) {
             DND.removeDragMonitor(this._dragMonitor);
             this._dragMonitor = null;
         }
 
+        this._removeDelayedMove();
         this._resetOvershoot();
         this._slideSidePages(SidePages.NONE);
         this.slideSidePagesReactionOnMotionEnabled = true;
@@ -768,6 +763,7 @@ var BaseAppView = GObject.registerClass({
 	    //console.log("onDragCancelled()");
         // At this point, the positions aren't stored yet, thus _redisplay()
         // will move all items to their original positions
+        this._removeDelayedMove();
         this._redisplay();
         this._slideSidePages(SidePages.NONE);
         this.slideSidePagesReactionOnMotionEnabled = true;
@@ -789,6 +785,7 @@ var BaseAppView = GObject.registerClass({
         if (!this._canAccept(source))
             return false;
 
+        /*
         if (this._dropPage) {
             const increment = this._dropPage === SidePages.NEXT ? 1 : -1;
             const { currentPage, nPages } = this._grid;
@@ -797,11 +794,13 @@ var BaseAppView = GObject.registerClass({
 
             this._moveItem(source, page, position);
             this.goToPage(page);
-        } else if (this._delayedMoveData) {
+        }*/ else if (this._delayedMoveData) {
             // Dropped before the icon was moved
+            /*
             const { page, position } = this._delayedMoveData;
 
             this._moveItem(source, page, position);
+            */
             this._removeDelayedMove();
         }
 
@@ -1996,6 +1995,8 @@ class AppViewItem extends St.Button {
         if (expandTitleOnHover)
             this.connect('notify::hover', this._onHover.bind(this));
         this.connect('destroy', this._onDestroy.bind(this));
+
+        this.isBeingMoved = false;
     }
 
     _onDestroy() {
@@ -2076,21 +2077,29 @@ class AppViewItem extends St.Button {
 
     scaleAndFade() {
         this.reactive = false;
+
+        // Directly disappear
+        this.opacity = 0;
+        /*
         this.ease({
             scale_x: 0.5,
             scale_y: 0.5,
             opacity: 0,
-            duration: 0 // Directly disappear
+            duration: 0 
         });
+        */
     }
 
     undoScaleAndFade() {
         this.reactive = true;
+        this.opacity = 255;
+        /*
         this.ease({
             scale_x: 1.0,
             scale_y: 1.0,
             opacity: 255,
         });
+        */
     }
 
     _canAccept(source) {
@@ -2522,12 +2531,13 @@ var FolderIcon = GObject.registerClass({
     getDragActor() {
         const iconParams = {
             createIcon: this._createIcon.bind(this),
-            showLabel: this.icon.label !== null,
-            setSizeManually: false,
+            showLabel: false,
+            setSizeManually: true,
         };
 
         const icon = new IconGrid.BaseIcon(this.name, iconParams);
         icon.style_class = this.style_class;
+        icon.setIconSize(this.icon.iconSize);
 
         return icon;
     }
@@ -2763,6 +2773,7 @@ var AppFolderDialog = GObject.registerClass({
         this._entry.text = newName;
     }
 
+    // TODO: here might be something interesting to do
     _switchActor(from, to) {
         to.reactive = true;
         to.ease({
@@ -3374,26 +3385,39 @@ var AppIcon = GObject.registerClass({
             if (this._folderPreviewId > 0)
                 return;
 
+            this.showingFolderPreview = false;
             this._folderPreviewId =
-                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 0, () => {
+                GLib.timeout_add(GLib.PRIORITY_DEFAULT, FOLDER_PREVIEW_SHOWN_DELAYED, () => {
                     this.add_style_pseudo_class('drop');
                     this._showFolderPreview();
+                    this.showingFolderPreview = true;
                     this._folderPreviewId = 0;
                     return GLib.SOURCE_REMOVE;
                 });
         } else {
+            // Quickly remove one
             if (this._folderPreviewId > 0) {
                 GLib.source_remove(this._folderPreviewId);
                 this._folderPreviewId = 0;
             }
             this._hideFolderPreview();
             this.remove_style_pseudo_class('drop');
+
+            // And preparing to remove another one.
+            setTimeout(() => {
+                if (this._folderPreviewId > 0) {
+                    GLib.source_remove(this._folderPreviewId);
+                    this._folderPreviewId = 0;
+                }
+                this._hideFolderPreview();
+                this.remove_style_pseudo_class('drop');
+            }, 2 * FOLDER_PREVIEW_SHOWN_DELAYED);
         }
     }
 
     acceptDrop(source, actor, x) {
         const accepted = super.acceptDrop(source, actor, x);
-        if (!accepted)
+        if (!accepted || !this.showingFolderPreview)
             return false;
 
         let view = _getViewFromIcon(this);

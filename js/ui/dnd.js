@@ -10,9 +10,11 @@ const Params = imports.misc.params;
 // Time to scale down to maxDragActorSize
 var SCALE_ANIMATION_TIME = 250;
 // Time to animate to original position on cancel
-var SNAP_BACK_ANIMATION_TIME = 250;
+var SNAP_BACK_ANIMATION_TIME = 300;
 // Time to animate to original position on success
-var REVERT_ANIMATION_TIME = 750;
+var REVERT_ANIMATION_TIME = 500;
+
+var DELAYED_MOVE_TIMEOUT = 100;
 
 var DragMotionResult = {
     NO_DROP:   0,
@@ -83,7 +85,7 @@ var _Draggable = class _Draggable {
         params = Params.parse(params, {
             manualMode: false,
             timeoutThreshold: 0,
-            restoreOnSuccess: false,
+            restoreOnSuccess: true,
             dragActorMaxSize: undefined,
             dragActorOpacity: undefined,
         });
@@ -259,10 +261,11 @@ var _Draggable = class _Draggable {
         } else if (event.type() == Clutter.EventType.MOTION ||
                    (event.type() == Clutter.EventType.TOUCH_UPDATE &&
                     global.display.is_pointer_emulating_sequence(event.get_event_sequence()))) {
-            if (this._dragActor && this._dragState == DragState.DRAGGING)
+            if (this._dragActor && this._dragState == DragState.DRAGGING) {
                 return this._updateDragPosition(event);
-            else if (this._dragActor == null && this._dragState != DragState.CANCELLED)
+            } else if (this._dragActor == null && this._dragState != DragState.CANCELLED) {
                 return this._maybeStartDrag(event);
+            }
 
         // We intercept KEY_PRESS event so that we can process Esc key press to cancel
         // dragging and ignore all other key presses.
@@ -643,6 +646,7 @@ var _Draggable = class _Draggable {
                     if (this._dragActor && this._dragActor.get_parent() == Main.uiGroup) {
                         if (this._restoreOnSuccess) {
                             this._restoreDragActor(event.get_time());
+
                             return true;
                         } else {
                             this._dragActor.destroy();
@@ -669,6 +673,7 @@ var _Draggable = class _Draggable {
 
         if (this._dragActorSource && this._dragActorSource.visible) {
             // Snap the clone back to its source
+            console.log("Snap the clone back to its source");
             [x, y] = this._dragActorSource.get_transformed_position();
             let [sourceScaledWidth] = this._dragActorSource.get_transformed_size();
             scale = sourceScaledWidth ? sourceScaledWidth / this._dragActor.width : 0;
@@ -676,6 +681,12 @@ var _Draggable = class _Draggable {
             // Snap the actor back to its original position within
             // its parent, adjusting for the fact that the parent
             // may have been moved or scaled
+
+            console.log(
+                "Snap the actor back to its original position within " +
+                "its parent, adjusting for the fact that the parent " +
+                "may have been moved or scaled"
+            );
             let [parentX, parentY] = this._dragOrigParent.get_transformed_position();
             let parentScale = _getRealActorScale(this._dragOrigParent);
 
@@ -684,6 +695,7 @@ var _Draggable = class _Draggable {
             scale = this._dragOrigScale * parentScale;
         } else {
             // Snap back actor to its original stage position
+            console.log("Snap back actor to its original stage position");
             x = this._snapBackX;
             y = this._snapBackY;
             scale = this._snapBackScale;
@@ -708,29 +720,39 @@ var _Draggable = class _Draggable {
             return;
         }
 
-        let [snapBackX, snapBackY, snapBackScale] = this._getRestoreLocation();
+        setTimeout(() => {
+            let [snapBackX, snapBackY, snapBackScale] = this._getRestoreLocation();
 
-        this._animateDragEnd(eventTime, {
-            x: snapBackX,
-            y: snapBackY,
-            scale_x: snapBackScale,
-            scale_y: snapBackScale,
-            duration: SNAP_BACK_ANIMATION_TIME,
-        });
+            this._animateDragEnd(eventTime, {
+                x: snapBackX,
+                y: snapBackY,
+                scale_x: snapBackScale,
+                scale_y: snapBackScale,
+                duration: SNAP_BACK_ANIMATION_TIME,
+            });
+        }, DELAYED_MOVE_TIMEOUT * 1.5);
     }
 
     _restoreDragActor(eventTime) {
+        console.log("restoreDragActor");
         this._dragState = DragState.INIT;
-        let [restoreX, restoreY, restoreScale] = this._getRestoreLocation();
 
+        /*
         // fade the actor back in at its original location
         this._dragActor.set_position(restoreX, restoreY);
         this._dragActor.set_scale(restoreScale, restoreScale);
         this._dragActor.opacity = 0;
-
-        this._animateDragEnd(eventTime, {
-            duration: REVERT_ANIMATION_TIME,
-        });
+        */
+        setTimeout(() => {
+            let [restoreX, restoreY, restoreScale] = this._getRestoreLocation();
+            this._animateDragEnd(eventTime, {
+                x: restoreX,
+                y: restoreY,
+                scale_x: restoreScale,
+                scale_y: restoreScale,
+                duration: REVERT_ANIMATION_TIME,
+            });
+        }, DELAYED_MOVE_TIMEOUT * 1.5);
     }
 
     _animateDragEnd(eventTime, params) {
