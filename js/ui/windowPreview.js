@@ -8,7 +8,7 @@ const {
 const DND = imports.ui.dnd;
 const OverviewControls = imports.ui.overviewControls;
 
-var WINDOW_DND_SIZE = 256;
+var WINDOW_DND_SIZE = 128;
 
 var WINDOW_OVERLAY_IDLE_HIDE_TIMEOUT = 750;
 var WINDOW_OVERLAY_FADE_TIME = 200;
@@ -315,6 +315,7 @@ var WindowPreview = GObject.registerClass({
             ongoingTransition.get_interval().peek_final_value() === 255)
             return;
 
+        /*
         const toShow = this._windowCanClose()
             ? [this._title, this._closeButton]
             : [this._title];
@@ -328,6 +329,7 @@ var WindowPreview = GObject.registerClass({
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
             });
         });
+        */
 
         const [width, height] = this.window_container.get_size();
         const { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
@@ -360,6 +362,7 @@ var WindowPreview = GObject.registerClass({
             ongoingTransition.get_interval().peek_final_value() === 0)
             return;
 
+        /*
         [this._title, this._closeButton].forEach(a => {
             a.opacity = 255;
             a.ease({
@@ -369,6 +372,7 @@ var WindowPreview = GObject.registerClass({
                 onComplete: () => a.hide(),
             });
         });
+        */
 
         this.window_container.ease({
             scale_x: 1,
