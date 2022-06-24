@@ -437,7 +437,7 @@ const PANEL_ITEM_IMPLEMENTATIONS = {
     'aggregateMenu': AggregateMenu,
     'appMenu': AppMenuButton,
     'dateMenu': imports.ui.dateMenu.DateMenuButton,
-    'a11y': imports.ui.status.accessibility.ATIndicator,
+    // 'a11y': imports.ui.status.accessibility.ATIndicator,
     'keyboard': imports.ui.status.keyboard.InputSourceIndicator,
     'dwellClick': imports.ui.status.dwellClick.DwellClickIndicator,
     'screenRecording': imports.ui.status.remoteAccess.ScreenRecordingIndicator,
