@@ -13,7 +13,7 @@ const { WindowPreview } = imports.ui.windowPreview;
 
 var WINDOW_PREVIEW_MAXIMUM_SCALE = 0.95;
 
-var WINDOW_REPOSITIONING_DELAY = 750;
+var WINDOW_REPOSITIONING_DELAY = 500;
 
 // When calculating a layout, we calculate the scale of windows and the percent
 // of the available area the new layout uses. If the values for the new layout,
@@ -1149,6 +1149,9 @@ class Workspace extends St.Widget {
         this._delegate = this;
     }
 
+    /*
+    It only cares if we need to leave overview when we click it.
+    */
     _shouldLeaveOverview() {
         if (!this.metaWorkspace || this.metaWorkspace.active)
             return true;

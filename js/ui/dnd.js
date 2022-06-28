@@ -673,7 +673,7 @@ var _Draggable = class _Draggable {
 
         if (this._dragActorSource && this._dragActorSource.visible) {
             // Snap the clone back to its source
-            console.log("Snap the clone back to its source");
+            // console.log("Snap the clone back to its source");
             [x, y] = this._dragActorSource.get_transformed_position();
             let [sourceScaledWidth] = this._dragActorSource.get_transformed_size();
             scale = sourceScaledWidth ? sourceScaledWidth / this._dragActor.width : 0;
@@ -682,11 +682,12 @@ var _Draggable = class _Draggable {
             // its parent, adjusting for the fact that the parent
             // may have been moved or scaled
 
-            console.log(
+            /* console.log(
                 "Snap the actor back to its original position within " +
                 "its parent, adjusting for the fact that the parent " +
                 "may have been moved or scaled"
             );
+            */
             let [parentX, parentY] = this._dragOrigParent.get_transformed_position();
             let parentScale = _getRealActorScale(this._dragOrigParent);
 
@@ -695,7 +696,7 @@ var _Draggable = class _Draggable {
             scale = this._dragOrigScale * parentScale;
         } else {
             // Snap back actor to its original stage position
-            console.log("Snap back actor to its original stage position");
+            // console.log("Snap back actor to its original stage position");
             x = this._snapBackX;
             y = this._snapBackY;
             scale = this._snapBackScale;
@@ -734,7 +735,7 @@ var _Draggable = class _Draggable {
     }
 
     _restoreDragActor(eventTime) {
-        console.log("restoreDragActor");
+        // console.log("restoreDragActor");
         this._dragState = DragState.INIT;
 
         /*

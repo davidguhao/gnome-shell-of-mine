@@ -18,6 +18,8 @@ var WINDOW_ACTIVE_SIZE_INC = 5; // in each direction
 
 var DRAGGING_WINDOW_OPACITY = 100;
 
+const WINDOW_CLOSE_ANIMATION_TIME = 400;
+
 const ICON_SIZE = 64;
 const ICON_OVERLAP = 0.7;
 
@@ -65,6 +67,9 @@ var WindowPreview = GObject.registerClass({
         // of its container, so set the layout manager after creating the
         // container
         windowContainer.layout_manager = new Shell.WindowPreviewLayout();
+
+        this.metaWindow.layout_manager = windowContainer.layout_manager; // Save
+
         this.add_child(windowContainer);
 
         this._addWindow(metaWindow);
@@ -99,7 +104,12 @@ var WindowPreview = GObject.registerClass({
         this._updateAttachedDialogs();
 
         let clickAction = new Clutter.ClickAction();
-        clickAction.connect('clicked', () => this._activate());
+        /*
+        Here's where clicking action intercepted and processed.
+        When you click the preview window, you will directly enter 
+        the window.
+        */
+        clickAction.connect('clicked', action => this._activate(action));
         clickAction.connect('long-press', this._onLongPress.bind(this));
         this.add_action(clickAction);
         this.connect('destroy', this._onDestroy.bind(this));
@@ -206,14 +216,45 @@ var WindowPreview = GObject.registerClass({
             pivot_point: new Graphene.Point({ x: -1, y: 0.5 }),
             factor: 0,
         }));
-        this._closeButton.connect('clicked', () => this._deleteAll());
+        this._closeButton.connect('clicked', () => this._deleteAllWithAnimation());
 
         this.add_child(this._title);
         this.add_child(this._icon);
         this.add_child(this._closeButton);
 
         this._overviewAdjustment.connectObject(
-            'notify::value', () => this._updateIconScale(), this);
+            'notify::value',
+            () => {
+                const { ControlsState } = OverviewControls;
+                const { currentState, initialState, finalState } = this._overviewAdjustment.getStateTransitionParams();
+                // console.log("current state = " + currentState);
+                // < 0.5 means overview control panel is about to be hidden
+                if(currentState < 0.5 && this._closeRequested) {
+                    // Close requested while exit during this process. animation has not been finished.
+                    // this.metaWindow.opacity = 0;
+                    // this.metaWindow.delete(global.get_current_time());
+
+                    this._deleteAll();
+                    this._closeRequested = false;
+
+                    // this.metaWindow.minimize();
+                    // this.metaWindow.kill();
+
+                    /*
+                    let windowActor = this.metaWindow.get_compositor_private();
+                    windowActor.scale_x = 0;
+                    windowActor.scale_y = 0;
+                    windowActor.ease({
+                                    scale_x: 1,
+                                    scale_y: 1,
+                                    duration: WINDOW_CLOSE_ANIMATION_TIME / 2,
+                                    mode: Clutter.AnimationMode.EASE_OUT_QUAD
+                                });
+                                */
+                }
+                this._updateIconScale();
+            },
+            this);
         this._updateIconScale();
 
         this.connect('notify::realized', () => {
@@ -337,12 +378,14 @@ var WindowPreview = GObject.registerClass({
         const origSize = Math.max(width, height);
         const scale = (origSize + activeExtraSize) / origSize;
 
-        this.window_container.ease({
-            scale_x: scale,
-            scale_y: scale,
-            duration: animate ? WINDOW_SCALE_TIME : 0,
-            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-        });
+        if(!this._closeRequested)
+            this.window_container.ease({
+                opacity: 255,
+                scale_x: scale,
+                scale_y: scale,
+                duration: animate ? WINDOW_SCALE_TIME : 0,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            });
 
         this.emit('show-chrome');
     }
@@ -374,12 +417,14 @@ var WindowPreview = GObject.registerClass({
         });
         */
 
-        this.window_container.ease({
-            scale_x: 1,
-            scale_y: 1,
-            duration: animate ? WINDOW_SCALE_TIME : 0,
-            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-        });
+        if(!this._closeRequested)
+            this.window_container.ease({
+                opacity: 255,
+                scale_x: 1,
+                scale_y: 1,
+                duration: animate ? WINDOW_SCALE_TIME : 0,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            });
     }
 
     _adjustOverlayOffsets() {
@@ -418,20 +463,58 @@ var WindowPreview = GObject.registerClass({
         Shell.util_set_hidden_from_pick(clone, true);
     }
 
+
     vfunc_has_overlaps() {
         return this._hasAttachedDialogs() ||
             this._icon.visible ||
             this._closeButton.visible;
     }
 
+    _deleteAllWithAnimation() {
+        this._closeRequested = true;
+        this.window_container.ease({
+            scale_x: 0,
+            scale_y: 0,
+            opacity: 0,
+            duration: WINDOW_CLOSE_ANIMATION_TIME,
+            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            onComplete: () => {
+                this.mustClose = true;
+                this._icon.ease({
+                    scale_x: 1.2,
+                    scale_y: 1.2,
+                    duration: WINDOW_CLOSE_ANIMATION_TIME / 4,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                        this._icon.ease({
+                            scale_x: 0,
+                            scale_y: 0,
+                            duration: WINDOW_CLOSE_ANIMATION_TIME / 2,
+                            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                            onComplete: () => {
+                                if(!this._closeRequested) return;
+
+                                this._deleteAll();
+                                this._closeRequested = false;
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
     _deleteAll() {
-        const windows = this.window_container.layout_manager.get_windows();
+        let windows;
+        if(this.workspace)
+            windows = this.workspace._container.layout_manager.get_windows();
+        else
+            windows = this.metaWindow.layout_manager.get_windows();
 
         // Delete all windows, starting from the bottom-most (most-modal) one
-        for (const window of windows.reverse())
+        for (const window of windows.reverse()) {
             window.delete(global.get_current_time());
-
-        this._closeRequested = true;
+        }
     }
 
     addDialog(win) {
@@ -446,7 +529,7 @@ var WindowPreview = GObject.registerClass({
         // The dialog popped up after the user tried to close the window,
         // assume it's a close confirmation and leave the overview
         if (this._closeRequested)
-            this._activate();
+            this._activate(null);
     }
 
     _hasAttachedDialogs() {
@@ -527,6 +610,7 @@ var WindowPreview = GObject.registerClass({
     }
 
     _onDestroy() {
+
         this.metaWindow._delegate = null;
         this._delegate = null;
 
@@ -546,9 +630,34 @@ var WindowPreview = GObject.registerClass({
         }
     }
 
-    _activate() {
-        this._selected = true;
-        this.emit('selected', global.get_current_time());
+    _activate(action) {
+        let isPrimaryButton = action && action.get_button() == 1;
+        let isSecondaryButton = action && action.get_button() == 3;
+        let isMiddleButton = action && action.get_button() == 2;
+
+        if(this._closeRequested) {
+            // Click when you are deleting it will stop it.
+            if(isSecondaryButton && !this.mustClose) {
+                this._closeRequested = false;
+
+                this.window_container.ease({
+                    scale_x: 1,
+                    scale_y: 1,
+                    opacity: 255,
+                    duration: WINDOW_CLOSE_ANIMATION_TIME,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                });
+            }
+
+            return;
+        }
+
+        if(isSecondaryButton && this._windowCanClose())
+            this._deleteAllWithAnimation();
+        else {
+            this._selected = true;
+            this.emit('selected', global.get_current_time());
+        }
     }
 
     vfunc_enter_event(crossingEvent) {
@@ -599,7 +708,7 @@ var WindowPreview = GObject.registerClass({
         let symbol = keyEvent.keyval;
         let isEnter = symbol == Clutter.KEY_Return || symbol == Clutter.KEY_KP_Enter;
         if (isEnter) {
-            this._activate();
+            this._activate(null);
             return true;
         }
 
@@ -607,6 +716,9 @@ var WindowPreview = GObject.registerClass({
     }
 
     _onLongPress(action, actor, state) {
+        let isSecondaryButton = action && action.get_button() == 3;
+        if(isSecondaryButton || this._closeRequested) return false;
+
         // Take advantage of the Clutter policy to consider
         // a long-press canceled when the pointer movement
         // exceeds dnd-drag-threshold to manually start the drag

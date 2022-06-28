@@ -1,0 +1,13 @@
+Build started at 2022-06-17T17:10:59.277794
+Main binary: /usr/bin/python3
+Build Options: 
+Python system: Linux
+The Meson build system
+Version: 0.61.2
+Source dir: /home/guhao/GNOME/gnome-shell/tools
+Build dir: /home/guhao/GNOME/gnome-shell/tools/build
+Build type: native build
+
+ERROR: Not the project root: first statement must be a call to project()
+
+Did you mean to run meson from the directory: "/home/guhao/GNOME/gnome-shell"?
