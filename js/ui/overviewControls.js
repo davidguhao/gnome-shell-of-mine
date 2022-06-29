@@ -14,7 +14,7 @@ const WindowManager = imports.ui.windowManager;
 const WorkspaceThumbnail = imports.ui.workspaceThumbnail;
 const WorkspacesView = imports.ui.workspacesView;
 
-const SMALL_WORKSPACE_RATIO = 0.15;
+const SMALL_WORKSPACE_RATIO = 0.1;
 const DASH_MAX_HEIGHT_RATIO = 0.15;
 
 const A11Y_SCHEMA = 'org.gnome.desktop.a11y.keyboard';
@@ -168,7 +168,7 @@ class ControlsManagerLayout extends Clutter.BoxLayout {
 
         // Workspace Thumbnails
         let thumbnailsHeight = 0;
-        if (this._workspacesThumbnails.visible) {
+        if (this._workspacesThumbnails.visible && false) {
             const { expandFraction } = this._workspacesThumbnails;
             [thumbnailsHeight] =
                 this._workspacesThumbnails.get_preferred_height(width);
@@ -373,7 +373,7 @@ class ControlsManager extends St.Widget {
         this.add_child(this._appDisplay);
         this.add_child(this.dash);
         this.add_child(this._searchController);
-        this.add_child(this._thumbnailsBox);
+        // this.add_child(this._thumbnailsBox);
         this.add_child(this._workspacesDisplay);
 
         this.layout_manager = new ControlsManagerLayout(
