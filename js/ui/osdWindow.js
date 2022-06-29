@@ -8,7 +8,7 @@ const Layout = imports.ui.layout;
 const Main = imports.ui.main;
 
 var HIDE_TIMEOUT = 1500;
-var FADE_TIME = 100;
+var FADE_TIME = 200;
 var LEVEL_ANIMATION_TIME = 100;
 
 var OsdWindow = GObject.registerClass(
@@ -17,7 +17,7 @@ class OsdWindow extends Clutter.Actor {
         super._init({
             x_expand: true,
             y_expand: true,
-            x_align: Clutter.ActorAlign.CENTER,
+            x_align: Clutter.ActorAlign.END,
             y_align: Clutter.ActorAlign.END,
         });
 
@@ -99,6 +99,7 @@ class OsdWindow extends Clutter.Actor {
 
             this.ease({
                 opacity: 255,
+                translation_x: -40,
                 duration: FADE_TIME,
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
             });
@@ -124,6 +125,7 @@ class OsdWindow extends Clutter.Actor {
         this.ease({
             opacity: 0,
             duration: FADE_TIME,
+            translation_x: 0,
             mode: Clutter.AnimationMode.EASE_OUT_QUAD,
             onComplete: () => {
                 this._reset();
