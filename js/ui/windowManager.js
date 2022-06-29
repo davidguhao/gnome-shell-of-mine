@@ -1485,11 +1485,10 @@ var WindowManager = class {
 
         switch (actor._windowType) {
         case Meta.WindowType.NORMAL:
-            actor.set_pivot_point(0.5, 1.0);
-            /*actor.scale_x = 0.01;
-            actor.scale_y = 0.05;*/
-            actor.scale_x = 0.6;
-            actor.scale_y = 0.6;
+            actor.set_pivot_point(0.5, 0.0);
+            actor.translation_y = -50;
+            actor.scale_x = 0.5;
+            actor.scale_y = 0.5;
             actor.opacity = 0;
             actor.show();
             this._mapping.add(actor);
@@ -1499,6 +1498,7 @@ var WindowManager = class {
                 opacity: 255,
                 scale_x: 1,
                 scale_y: 1,
+                translation_y: 0,
                 duration: SHOW_WINDOW_ANIMATION_TIME,
                 mode: Clutter.AnimationMode.EASE_OUT_EXPO,
                 onStopped: () => this._mapWindowDone(shellwm, actor),
@@ -1563,13 +1563,14 @@ var WindowManager = class {
 
         switch (actor.meta_window.window_type) {
         case Meta.WindowType.NORMAL:
-            actor.set_pivot_point(0.5, 0.5);
+            actor.set_pivot_point(0.5, 0.0);
             this._destroying.add(actor);
 
             actor.ease({
                 opacity: 0,
-                scale_x: 0.8,
-                scale_y: 0.8,
+                scale_x: 0.5,
+                scale_y: 0.5,
+                translation_y: -50,
                 duration: DESTROY_WINDOW_ANIMATION_TIME,
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
                 onStopped: () => this._destroyWindowDone(shellwm, actor),
