@@ -721,6 +721,8 @@ var _Draggable = class _Draggable {
             return;
         }
 
+        let timeout = typeof this.actor._delegate.delayOnResumePositionAndScale !== "undefined" && this.actor._delegate.delayOnResumePositionAndScale !== null ? this.actor._delegate.delayOnResumePositionAndScale * 1.5 : DELAYED_MOVE_TIMEOUT * 1.5;
+        // console.log(this.actor);
         setTimeout(() => {
             let [snapBackX, snapBackY, snapBackScale] = this._getRestoreLocation();
 
@@ -731,7 +733,7 @@ var _Draggable = class _Draggable {
                 scale_y: snapBackScale,
                 duration: SNAP_BACK_ANIMATION_TIME,
             });
-        }, DELAYED_MOVE_TIMEOUT * 1.5);
+        }, timeout);
     }
 
     _restoreDragActor(eventTime) {
@@ -744,6 +746,7 @@ var _Draggable = class _Draggable {
         this._dragActor.set_scale(restoreScale, restoreScale);
         this._dragActor.opacity = 0;
         */
+        let timeout = typeof this.actor._delegate.delayOnResumePositionAndScale !== "undefined" && this.actor._delegate.delayOnResumePositionAndScale !== null ? this.actor._delegate.delayOnResumePositionAndScale * 1.5 : DELAYED_MOVE_TIMEOUT * 1.5;
         setTimeout(() => {
             let [restoreX, restoreY, restoreScale] = this._getRestoreLocation();
             this._animateDragEnd(eventTime, {
@@ -753,7 +756,7 @@ var _Draggable = class _Draggable {
                 scale_y: restoreScale,
                 duration: REVERT_ANIMATION_TIME,
             });
-        }, DELAYED_MOVE_TIMEOUT * 1.5);
+        }, timeout);
     }
 
     _animateDragEnd(eventTime, params) {

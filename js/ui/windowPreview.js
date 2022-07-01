@@ -264,6 +264,9 @@ var WindowPreview = GObject.registerClass({
             this._title.ensure_style();
             this._icon.ensure_style();
         });
+
+        // Must be equal to SHRINK_WORKSPACE_TIME
+        this.delayOnResumePositionAndScale = 200;
     }
 
     _updateIconScale() {
@@ -715,9 +718,13 @@ var WindowPreview = GObject.registerClass({
         return super.vfunc_key_press_event(keyEvent);
     }
 
-    _onLongPress(action, actor, state) {
+    shouldLongPressDisabled(action) {
         let isSecondaryButton = action && action.get_button() == 3;
-        if(isSecondaryButton || this._closeRequested) return false;
+        
+        return isSecondaryButton || this._closeRequested;
+    }
+    _onLongPress(action, actor, state) {
+        if(this.shouldLongPressDisabled(action)) return false;
 
         // Take advantage of the Clutter policy to consider
         // a long-press canceled when the pointer movement

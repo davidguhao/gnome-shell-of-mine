@@ -1282,7 +1282,7 @@ class Workspace extends St.Widget {
         clone.ease({
             scale_x: 1,
             scale_y: 1,
-            duration: 250,
+            duration: 500,
             onStopped: () => clone.set_pivot_point(0, 0),
         });
 

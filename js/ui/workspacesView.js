@@ -22,6 +22,8 @@ const WORKSPACE_INACTIVE_SCALE = 0.94;
 
 const SECONDARY_WORKSPACE_SCALE = 0.80;
 
+const SHRINK_WORKSPACE_TIME = 200;
+
 var WorkspacesViewBase = GObject.registerClass({
     GTypeFlags: GObject.TypeFlags.ABSTRACT,
 }, class WorkspacesViewBase extends St.Widget {
@@ -805,7 +807,10 @@ var WorkspacesDisplay = GObject.registerClass(
 class WorkspacesDisplay extends St.Widget {
     _init(controls, scrollAdjustment, overviewAdjustment) {
         super._init({
-            layout_manager: new Clutter.BinLayout(),
+            layout_manager: new Clutter.GridLayout({
+                row_homogeneous: true,
+                column_homogeneous: true,
+            }),
             reactive: true,
         });
 
@@ -856,6 +861,7 @@ class WorkspacesDisplay extends St.Widget {
         this._gestureActive = false; // touch(pad) gestures
 
         this.connect('destroy', this._onDestroy.bind(this));
+
     }
 
     _onDestroy() {
@@ -863,17 +869,72 @@ class WorkspacesDisplay extends St.Widget {
             Meta.later_remove(this._parentSetLater);
             this._parentSetLater = 0;
         }
+        Main.overview.disconnectObject(this);
     }
 
     _windowDragBegin() {
         this._inWindowDrag = true;
         this._updateSwipeTracker();
+
+        // TODO: Shrink the workspaces for user to easily drag it to the target workspace.
+        this.shrinkOrRestoreWorkSpaces(true);
+        this.reorderAfterShrinkOrRestore(true);
     }
 
     _windowDragEnd() {
         this._inWindowDrag = false;
         this._updateSwipeTracker();
+
+        // TODO: Restore the workspaces for user to focus on the current one.
+        this.shrinkOrRestoreWorkSpaces(false);
+        this.reorderAfterShrinkOrRestore(false);
     }
+
+    shrinkOrRestoreWorkSpaces(shrink) {
+        if(shrink === this.isInShrinkedView) return;
+
+        this.set_pivot_point(0.5, 0.5);
+        this.isInShrinkingAnimation = true;
+        if(shrink) {
+            const { ControlsState } = OverviewControls;
+
+            let scale_x, scale_y;
+            if(this._overviewAdjustment.value === ControlsState.APP_GRID) {
+                scale_x = 2.5;
+                scale_y = 2.5;
+            } else {
+                scale_x = 0.3;
+                scale_y = 0.3;
+            }
+
+            this.ease({
+                scale_x: scale_x,
+                scale_y: scale_y,
+
+                duration: SHRINK_WORKSPACE_TIME,
+                onComplete: () => {
+                    this.isInShrinkingAnimation = false;
+                }
+            });
+        } else {
+            this.ease({
+                scale_x: 1,
+                scale_y: 1,
+
+                duration: SHRINK_WORKSPACE_TIME,
+                onComplete: () => {
+                    this.isInShrinkingAnimation = false;
+                }
+            });
+        }
+        this.isInShrinkedView = shrink;
+    }
+    reorderAfterShrinkOrRestore(shrink) {
+        if(shrink) {
+        } else {
+        }
+    }
+
 
     _updateSwipeTracker() {
         this._swipeTracker.enabled =
@@ -1009,7 +1070,6 @@ class WorkspacesDisplay extends St.Widget {
     }
 
     vfunc_hide() {
-        Main.overview.disconnectObject(this);
         global.stage.disconnectObject(this);
 
         for (let i = 0; i < this._workspacesViews.length; i++)
@@ -1039,6 +1099,7 @@ class WorkspacesDisplay extends St.Widget {
 
                 view.visible = this._primaryVisible;
                 this.bind_property('opacity', view, 'opacity', GObject.BindingFlags.SYNC_CREATE);
+                // TODO: I guess this is where the grid layout will affect.
                 this.add_child(view);
             } else {
                 view = new SecondaryMonitorDisplay(i,
@@ -1127,6 +1188,18 @@ class WorkspacesDisplay extends St.Widget {
         case Clutter.KEY_End:
             which = workspaceManager.n_workspaces - 1;
             break;
+
+        // TODO: Escape to toggle shrinking situation.
+        // BUG: The experience is not good.
+        /*
+        case Clutter.KEY_Escape:
+            if(!this._inWindowDrag) {
+                let currentShrinkMode = !this.isInShrinkedView;
+                this.escapeToShrinkMode = currentShrinkMode;
+                this.shrinkOrRestoreWorkSpaces(currentShrinkMode);
+                return Clutter.EVENT_STOP;
+            }
+            */
         default:
             return Clutter.EVENT_PROPAGATE;
         }
