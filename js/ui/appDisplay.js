@@ -2079,15 +2079,15 @@ class AppViewItem extends St.Button {
         this.reactive = false;
 
         // Directly disappear
-        this.opacity = 0;
-        /*
+        // this.opacity = 0;
         this.ease({
+            /*
             scale_x: 0.5,
             scale_y: 0.5,
+            */
             opacity: 0,
-            duration: 0 
+            duration: 30
         });
-        */
     }
 
     undoScaleAndFade() {
@@ -3123,7 +3123,10 @@ var AppIcon = GObject.registerClass({
 }, class AppIcon extends AppViewItem {
     _init(app, iconParams = {}) {
         // Get the isDraggable property without passing it on to the BaseIcon:
-        const appIconParams = Params.parse(iconParams, { isDraggable: true }, true);
+        const appIconParams = Params.parse(iconParams, {
+        isDraggable: true,
+        expandTitleOnHover: false,
+        }, true);
         const isDraggable = appIconParams['isDraggable'];
         delete iconParams['isDraggable'];
         const expandTitleOnHover = appIconParams['expandTitleOnHover'];
