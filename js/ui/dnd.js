@@ -242,17 +242,32 @@ var _Draggable = class _Draggable {
         // didn't start the drag, to drop the draggable in case the drag was in progress, and
         // to complete the drag and ensure that whatever happens to be under the pointer does
         // not get triggered if the drag was cancelled with Esc.
-        if (this._eventIsRelease(event)) {
+        if (this._eventIsRelease(event) && !this.justInterceptedReleaseEvent) {
+            this.justInterceptedReleaseEvent = true;
+
+            let delayedTimeout = typeof this.actor._delegate.delayOnResumePositionAndScale !== "undefined" && this.actor._delegate.delayOnResumePositionAndScale !== null ? this.actor._delegate.delayOnResumePositionAndScale * 1.5 : DELAYED_MOVE_TIMEOUT * 1.5;
+            let timeout = delayedTimeout + SNAP_BACK_ANIMATION_TIME;
+            setTimeout(() => {
+                this.justInterceptedReleaseEvent = false;
+            }, timeout);
+
+            console.log("DEBUG DEBUG ---- onEvent BUTTON_RELEASE");
             this._buttonDown = false;
             if (this._dragState == DragState.DRAGGING) {
-                return this._dragActorDropped(event);
+
+                console.log("DEBUG DEBUG ---- dragActorDropped");
+                let result = this._dragActorDropped(event);
+
+                return result;
             } else if ((this._dragActor != null || this._dragState == DragState.CANCELLED) &&
                        !this._animationInProgress) {
                 // Drag must have been cancelled with Esc.
+                console.log("DEBUG DEBUG ---- Drag must have been cancelled with Esc");
                 this._dragComplete();
                 return Clutter.EVENT_STOP;
             } else {
                 // Drag has never started.
+                console.log("DEBUG DEBUG ---- Drag has never started.");
                 this._ungrabActor();
                 return Clutter.EVENT_PROPAGATE;
             }
