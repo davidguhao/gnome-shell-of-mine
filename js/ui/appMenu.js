@@ -6,6 +6,7 @@ const AppFavorites = imports.ui.appFavorites;
 const Main = imports.ui.main;
 const ParentalControlsManager = imports.misc.parentalControlsManager;
 const PopupMenu = imports.ui.popupMenu;
+const AppInfoDialog = imports.ui.appInfoDialog;
 
 var AppMenu = class AppMenu extends PopupMenu.PopupMenu {
     /**
@@ -51,22 +52,26 @@ var AppMenu = class AppMenu extends PopupMenu.PopupMenu {
 
         this.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        this._newWindowItem = this.addAction(_('New Window'), () => {
-            this._animateLaunch();
-            this._app.open_new_window(-1);
-            Main.overview.hide();
-        });
-
         this._infoItem = this.addAction(_('App Info'), () => {
             let appId = this._app.get_id();
             let name = this._app.get_name();
             let description = this._app.get_description();
-            let desktopFilename = this._app.get_desktop_filename();
+            let desktopFilePath = this._app.get_desktop_filename();
 
+            /*
             console.log("App name Is " + name);
             console.log("App description Is " + description);
             console.log("App id is " + appId);
-            console.log(".desktop filename : " + desktopFilename);
+            console.log(".desktop filename : " + desktopFilePath);
+            */
+
+            this.openAppInfoDialog(name, appId, description, desktopFilePath);
+        });
+
+        this._newWindowItem = this.addAction(_('New Window'), () => {
+            this._animateLaunch();
+            this._app.open_new_window(-1);
+            Main.overview.hide();
         });
 
         this._actionSection = new PopupMenu.PopupMenuSection();
@@ -130,6 +135,12 @@ var AppMenu = class AppMenu extends PopupMenu.PopupMenu {
         this._updateFavoriteItem();
         this._updateGpuItem();
         this._updateDetailsVisibility();
+    }
+
+    openAppInfoDialog(name, appId, description, desktopFilePath) {
+        let appInfoDialog = new AppInfoDialog.AppInfoDialog();
+        appInfoDialog.setContent(name, appId, description, desktopFilePath);
+        appInfoDialog.open();
     }
 
     _onAppStateChanged(sys, app) {

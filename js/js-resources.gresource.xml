@@ -41,6 +41,7 @@
     <file>ui/altTab.js</file>
     <file>ui/animation.js</file>
     <file>ui/appDisplay.js</file>
+    <file>ui/appInfoDialog.js</file>
     <file>ui/appFavorites.js</file>
     <file>ui/appMenu.js</file>
     <file>ui/audioDeviceSelection.js</file>
