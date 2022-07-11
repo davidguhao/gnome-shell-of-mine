@@ -151,6 +151,12 @@ shell_app_get_property (GObject    *gobject,
     }
 }
 
+const char* shell_app_get_desktop_filename(ShellApp *app)
+{
+    
+    return g_desktop_app_info_get_filename(G_DESKTOP_APP_INFO(app->info));
+}
+
 static void
 shell_app_set_property (GObject      *gobject,
                         guint         prop_id,

@@ -57,6 +57,18 @@ var AppMenu = class AppMenu extends PopupMenu.PopupMenu {
             Main.overview.hide();
         });
 
+        this._infoItem = this.addAction(_('App Info'), () => {
+            let appId = this._app.get_id();
+            let name = this._app.get_name();
+            let description = this._app.get_description();
+            let desktopFilename = this._app.get_desktop_filename();
+
+            console.log("App name Is " + name);
+            console.log("App description Is " + description);
+            console.log("App id is " + appId);
+            console.log(".desktop filename : " + desktopFilename);
+        });
+
         this._actionSection = new PopupMenu.PopupMenuSection();
         this.addMenuItem(this._actionSection);
 

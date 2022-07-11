@@ -32,6 +32,7 @@ ClutterActor *shell_app_create_icon_texture (ShellApp *app, int size);
 GIcon *shell_app_get_icon (ShellApp *app);
 const char *shell_app_get_name (ShellApp *app);
 const char *shell_app_get_description (ShellApp *app);
+const char *shell_app_get_desktop_filename(ShellApp *app);
 gboolean shell_app_is_window_backed (ShellApp *app);
 
 void shell_app_activate_window (ShellApp *app, MetaWindow *window, guint32 timestamp);
