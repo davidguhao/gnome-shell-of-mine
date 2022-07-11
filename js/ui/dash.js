@@ -11,9 +11,8 @@ const Main = imports.ui.main;
 const Overview = imports.ui.overview;
 
 var DASH_ANIMATION_TIME = 200;
-var DASH_ITEM_LABEL_SHOW_TIME = 150;
-var DASH_ITEM_LABEL_HIDE_TIME = 100;
-var DASH_ITEM_HOVER_TIMEOUT = 300;
+var DASH_ITEM_LABEL_SHOW_TIME = 30;
+var DASH_ITEM_LABEL_HIDE_TIME = 60;
 
 function getAppFromSource(source) {
     if (source instanceof AppDisplay.AppIcon)
@@ -35,22 +34,6 @@ class DashIcon extends AppDisplay.AppIcon {
         super.popupMenu(St.Side.BOTTOM);
     }
 
-    // Disable scale-n-fade methods used during DND by parent
-    /*
-    scaleAndFade() {
-    }
-
-    undoScaleAndFade() {
-    }
-
-    handleDragOver() {
-        return DND.DragMotionResult.CONTINUE;
-    }
-
-    acceptDrop() {
-        return false;
-    }
-    */
 });
 
 // A container like StBin, but taking the child's scale into account
@@ -321,9 +304,7 @@ var Dash = GObject.registerClass({
         this._dragPlaceholder = null;
         this._dragPlaceholderPos = -1;
         this._animatingPlaceholdersCount = 0;
-        this._showLabelTimeoutId = 0;
         this._resetHoverTimeoutId = 0;
-        this._labelShowing = false;
 
         super._init({
             name: 'dash',
@@ -485,12 +466,10 @@ var Dash = GObject.registerClass({
         });
 
         item.child.connect('clicked', () => {
-            this._labelShowing = false;
             item.hideLabel();
         });
 
         Main.overview.connectObject('hiding', () => {
-            this._labelShowing = false;
             item.hideLabel();
         }, item.child);
 
@@ -526,50 +505,15 @@ var Dash = GObject.registerClass({
     _itemMenuStateChanged(item, opened) {
         // When the menu closes, it calls sync_hover, which means
         // that the notify::hover handler does everything we need to.
-        if (opened) {
-            if (this._showLabelTimeoutId > 0) {
-                GLib.source_remove(this._showLabelTimeoutId);
-                this._showLabelTimeoutId = 0;
-            }
-
+        if (opened)
             item.hideLabel();
-        }
     }
 
     _syncLabel(item, appIcon) {
         let shouldShow = appIcon ? appIcon.shouldShowTooltip() : item.child.get_hover();
 
-        if (shouldShow) {
-            if (this._showLabelTimeoutId == 0) {
-                let timeout = this._labelShowing ? 0 : DASH_ITEM_HOVER_TIMEOUT;
-                this._showLabelTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, timeout,
-                    () => {
-                        this._labelShowing = true;
-                        item.showLabel();
-                        this._showLabelTimeoutId = 0;
-                        return GLib.SOURCE_REMOVE;
-                    });
-                GLib.Source.set_name_by_id(this._showLabelTimeoutId, '[gnome-shell] item.showLabel');
-                if (this._resetHoverTimeoutId > 0) {
-                    GLib.source_remove(this._resetHoverTimeoutId);
-                    this._resetHoverTimeoutId = 0;
-                }
-            }
-        } else {
-            if (this._showLabelTimeoutId > 0)
-                GLib.source_remove(this._showLabelTimeoutId);
-            this._showLabelTimeoutId = 0;
-            item.hideLabel();
-            if (this._labelShowing) {
-                this._resetHoverTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, DASH_ITEM_HOVER_TIMEOUT,
-                    () => {
-                        this._labelShowing = false;
-                        this._resetHoverTimeoutId = 0;
-                        return GLib.SOURCE_REMOVE;
-                    });
-                GLib.Source.set_name_by_id(this._resetHoverTimeoutId, '[gnome-shell] this._labelShowing');
-            }
-        }
+        if (shouldShow) item.showLabel();
+        else item.hideLabel();
     }
 
     _adjustIconSize() {
