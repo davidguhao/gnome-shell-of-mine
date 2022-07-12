@@ -30,6 +30,17 @@ class AppInfoDialog extends ModalDialog.ModalDialog {
             action: () => this.close(),
             key: Clutter.KEY_Escape,
         });
+
+        this.addButton({
+            label: _('COPY DESKTOP FILE PATH'),
+            action: () => {
+                const clipboard = St.Clipboard.get_default();
+                // clipboard.set_content(St.ClipboardType.CLIPBOARD, 'text/plain', this.desktopFilePath);
+                clipboard.set_text(St.ClipboardType.CLIPBOARD, this.desktopFilePath);
+
+                this.close();
+            },
+        });
     }
 
     open() {
