@@ -3150,6 +3150,7 @@ var AppIcon = GObject.registerClass({
 
         iconParams['createIcon'] = this._createIcon.bind(this);
         iconParams['setSizeManually'] = true;
+        iconParams['showLabel'] = false;
         this.icon = new IconGrid.BaseIcon(app.get_name(), iconParams);
         this._iconContainer.add_child(this.icon);
 
@@ -3355,7 +3356,7 @@ var AppIcon = GObject.registerClass({
     }
 
     _showFolderPreview() {
-        this.icon.label.opacity = 0;
+        if(this.icon.label) this.icon.label.opacity = 0;
         this.icon.icon.ease({
             scale_x: FOLDER_SUBICON_FRACTION,
             scale_y: FOLDER_SUBICON_FRACTION,
@@ -3363,7 +3364,7 @@ var AppIcon = GObject.registerClass({
     }
 
     _hideFolderPreview() {
-        this.icon.label.opacity = 255;
+        if(this.icon.label) this.icon.label.opacity = 255;
         this.icon.icon.ease({
             scale_x: 1.0,
             scale_y: 1.0,
