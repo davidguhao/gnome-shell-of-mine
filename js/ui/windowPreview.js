@@ -363,17 +363,21 @@ var WindowPreview = GObject.registerClass({
         const toShow = this._windowCanClose()
             ? [this._title, this._closeButton]
             : [this._title];
+            */
+        /*
+        const toShow = [this._title];
 
         toShow.forEach(a => {
             a.opacity = 0;
             a.show();
             a.ease({
                 opacity: 255,
-                duration: animate ? WINDOW_OVERLAY_FADE_TIME : 0,
+                duration: 0, // animate ? WINDOW_OVERLAY_FADE_TIME : 0,
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
             });
         });
         */
+        this._title.show();
 
         const [width, height] = this.window_container.get_size();
         const { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
@@ -408,17 +412,20 @@ var WindowPreview = GObject.registerClass({
             ongoingTransition.get_interval().peek_final_value() === 0)
             return;
 
+        // [this._title, this._closeButton].forEach(a => {
         /*
-        [this._title, this._closeButton].forEach(a => {
+        [this._title].forEach(a => {
             a.opacity = 255;
             a.ease({
                 opacity: 0,
-                duration: animate ? WINDOW_OVERLAY_FADE_TIME : 0,
+                duration: 0, // animate ? WINDOW_OVERLAY_FADE_TIME : 0,
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
                 onComplete: () => a.hide(),
             });
         });
         */
+
+        this._title.hide();
 
         if(!this._closeRequested)
             this.window_container.ease({
@@ -474,6 +481,7 @@ var WindowPreview = GObject.registerClass({
     }
 
     _deleteAllWithAnimation() {
+        this._title.hide();
         this._closeRequested = true;
         this.window_container.ease({
             scale_x: 0,
