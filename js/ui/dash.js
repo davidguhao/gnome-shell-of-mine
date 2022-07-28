@@ -154,6 +154,21 @@ class DashItemContainer extends St.Widget {
             mode: Clutter.AnimationMode.EASE_OUT_QUAD,
         });
     }
+    /**
+     * With animation for sure
+     */
+    hide() {
+        this.ease({
+            scale_x: 0,
+            scale_y: 0,
+            opacity: 255,
+            duration: DASH_ANIMATION_TIME,
+            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            onComplete: () => {
+                this.destroy();
+            }
+        });
+    }
 
     animateOutAndDestroy() {
         this.label.hide();
@@ -851,20 +866,24 @@ var Dash = GObject.registerClass({
             // If the placeholder already exists, we just move
             // it, but if we are adding it, expand its size in
             // an animation
-            let fadeIn;
-            if (this._dragPlaceholder) {
-                this._dragPlaceholder.destroy();
-                fadeIn = false;
-            } else {
-                fadeIn = true;
-            }
+            // let fadeIn;
+            // if (this._dragPlaceholder) {
+            //     this._dragPlaceholder.destroy();
+            //     fadeIn = false;
+            // } else {
+            //     fadeIn = true;
+            // }
+
+            if(this._dragPlaceholder)
+                this._dragPlaceholder.hide();
 
             this._dragPlaceholder = new DragPlaceholderItem();
+
             this._dragPlaceholder.child.set_width(this.iconSize);
             this._dragPlaceholder.child.set_height(this.iconSize / 2);
             this._box.insert_child_at_index(this._dragPlaceholder,
                                             this._dragPlaceholderPos);
-            this._dragPlaceholder.show(fadeIn);
+            this._dragPlaceholder.show(true); // here
         }
 
         if (!this._dragPlaceholder)
