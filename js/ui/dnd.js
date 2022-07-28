@@ -242,14 +242,16 @@ var _Draggable = class _Draggable {
         // didn't start the drag, to drop the draggable in case the drag was in progress, and
         // to complete the drag and ensure that whatever happens to be under the pointer does
         // not get triggered if the drag was cancelled with Esc.
+        
+        // if(this.justInterceptedReleaseEvent) return Clutter.EVENT_PROPAGATE;
         if (this._eventIsRelease(event) && !this.justInterceptedReleaseEvent) {
-            this.justInterceptedReleaseEvent = true;
+            // this.justInterceptedReleaseEvent = true;
 
-            let delayedTimeout = typeof this.actor._delegate.delayOnResumePositionAndScale !== "undefined" && this.actor._delegate.delayOnResumePositionAndScale !== null ? this.actor._delegate.delayOnResumePositionAndScale * 1.5 : DELAYED_MOVE_TIMEOUT * 1.5;
-            let timeout = delayedTimeout + SNAP_BACK_ANIMATION_TIME;
-            setTimeout(() => {
-                this.justInterceptedReleaseEvent = false;
-            }, timeout);
+            // let delayedTimeout = typeof this.actor._delegate.delayOnResumePositionAndScale !== "undefined" && this.actor._delegate.delayOnResumePositionAndScale !== null ? this.actor._delegate.delayOnResumePositionAndScale * 1.5 : DELAYED_MOVE_TIMEOUT * 1.5;
+            // let timeout = delayedTimeout + SNAP_BACK_ANIMATION_TIME;
+            // setTimeout(() => {
+            //     this.justInterceptedReleaseEvent = false;
+            // }, timeout);
 
             console.log("DEBUG DEBUG ---- onEvent BUTTON_RELEASE");
             this._buttonDown = false;
@@ -734,20 +736,10 @@ var _Draggable = class _Draggable {
 
             return;
         }
-
-        let timeout = typeof this.actor._delegate.delayOnResumePositionAndScale !== "undefined" && this.actor._delegate.delayOnResumePositionAndScale !== null ? this.actor._delegate.delayOnResumePositionAndScale * 1.5 : DELAYED_MOVE_TIMEOUT * 1.5;
-        // console.log(this.actor);
-        setTimeout(() => {
-            let [snapBackX, snapBackY, snapBackScale] = this._getRestoreLocation();
-
-            this._animateDragEnd(eventTime, {
-                x: snapBackX,
-                y: snapBackY,
-                scale_x: snapBackScale,
-                scale_y: snapBackScale,
-                duration: SNAP_BACK_ANIMATION_TIME,
-            });
-        }, timeout);
+        
+        this._animateDragEnd(eventTime, {
+            duration: SNAP_BACK_ANIMATION_TIME,
+        });
     }
 
     _restoreDragActor(eventTime) {
@@ -760,30 +752,35 @@ var _Draggable = class _Draggable {
         this._dragActor.set_scale(restoreScale, restoreScale);
         this._dragActor.opacity = 0;
         */
-        let timeout = typeof this.actor._delegate.delayOnResumePositionAndScale !== "undefined" && this.actor._delegate.delayOnResumePositionAndScale !== null ? this.actor._delegate.delayOnResumePositionAndScale * 1.5 : DELAYED_MOVE_TIMEOUT * 1.5;
-        setTimeout(() => {
-            let [restoreX, restoreY, restoreScale] = this._getRestoreLocation();
-            this._animateDragEnd(eventTime, {
-                x: restoreX,
-                y: restoreY,
-                scale_x: restoreScale,
-                scale_y: restoreScale,
-                duration: REVERT_ANIMATION_TIME,
-            });
-        }, timeout);
+
+        this._animateDragEnd(eventTime, {
+            duration: REVERT_ANIMATION_TIME,
+        });
     }
 
     _animateDragEnd(eventTime, params) {
         this._animationInProgress = true;
 
+        let timeout = typeof this.actor._delegate.delayOnResumePositionAndScale !== "undefined" && this.actor._delegate.delayOnResumePositionAndScale !== null ? this.actor._delegate.delayOnResumePositionAndScale * 1.5 : DELAYED_MOVE_TIMEOUT * 1.5;
+
         // start the animation
-        this._dragActor.ease(Object.assign(params, {
-            opacity: this._dragOrigOpacity,
-            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-            onComplete: () => {
-                this._onAnimationComplete(this._dragActor, eventTime);
-            },
-        }));
+        setTimeout(() => {
+            let [x, y, scale] = this._getRestoreLocation();
+
+        
+            this._dragActor.ease(Object.assign(params, {
+                x: x,
+                y: y,
+                scale_x: scale,
+                scale_y: scale,
+                opacity: this._dragOrigOpacity,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                onComplete: () => {
+                  this._onAnimationComplete(this._dragActor, eventTime);
+                },
+            }));
+        }, timeout);
+    ;
     }
 
     _finishAnimation() {
