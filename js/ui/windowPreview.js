@@ -672,7 +672,8 @@ var WindowPreview = GObject.registerClass({
     }
 
     vfunc_enter_event(crossingEvent) {
-        this.showOverlay(true);
+        if(!this._closeRequested)
+            this.showOverlay(true);
         return super.vfunc_enter_event(crossingEvent);
     }
 
@@ -707,7 +708,8 @@ var WindowPreview = GObject.registerClass({
 
     vfunc_key_focus_in() {
         super.vfunc_key_focus_in();
-        this.showOverlay(true);
+        if(!this._closeRequested)
+            this.showOverlay(true);
     }
 
     vfunc_key_focus_out() {
