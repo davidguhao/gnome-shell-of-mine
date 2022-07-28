@@ -845,9 +845,9 @@ var Dash = GObject.registerClass({
         if (this._emptyDropTarget)
             pos = 0; // always insert at the start when dash is empty
         else if (this.text_direction === Clutter.TextDirection.RTL)
-            pos = numChildren - Math.floor(x * numChildren / boxWidth);
+            pos = numChildren - Math.round(x * numChildren / boxWidth);
         else
-            pos = Math.floor(x * numChildren / boxWidth);
+            pos = Math.round(x * numChildren / boxWidth);
 
         // Put the placeholder after the last favorite if we are not
         // in the favorites zone
@@ -862,17 +862,6 @@ var Dash = GObject.registerClass({
                 this._clearDragPlaceholder();
                 return DND.DragMotionResult.CONTINUE;
             }
-
-            // If the placeholder already exists, we just move
-            // it, but if we are adding it, expand its size in
-            // an animation
-            // let fadeIn;
-            // if (this._dragPlaceholder) {
-            //     this._dragPlaceholder.destroy();
-            //     fadeIn = false;
-            // } else {
-            //     fadeIn = true;
-            // }
 
             if(this._dragPlaceholder)
                 this._dragPlaceholder.hide();
