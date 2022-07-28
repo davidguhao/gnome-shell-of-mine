@@ -10,7 +10,7 @@ const OverviewControls = imports.ui.overviewControls;
 
 var WINDOW_DND_SIZE = 128;
 
-var WINDOW_OVERLAY_IDLE_HIDE_TIMEOUT = 750;
+// var WINDOW_OVERLAY_IDLE_HIDE_TIMEOUT = 750;
 var WINDOW_OVERLAY_FADE_TIME = 200;
 
 var WINDOW_SCALE_TIME = 500;
@@ -129,7 +129,7 @@ var WindowPreview = GObject.registerClass({
         this._overlayEnabled = true;
         this._overlayShown = false;
         this._closeRequested = false;
-        this._idleHideOverlayId = 0;
+        // this._idleHideOverlayId = 0;
 
         const tracker = Shell.WindowTracker.get_default();
         const app = tracker.get_window_app(this.metaWindow);
@@ -630,10 +630,10 @@ var WindowPreview = GObject.registerClass({
             delete this._longPressLater;
         }
 
-        if (this._idleHideOverlayId > 0) {
-            GLib.source_remove(this._idleHideOverlayId);
-            this._idleHideOverlayId = 0;
-        }
+        // if (this._idleHideOverlayId > 0) {
+        //     GLib.source_remove(this._idleHideOverlayId);
+        //     this._idleHideOverlayId = 0;
+        // }
 
         if (this.inDrag) {
             this.emit('drag-end');
@@ -681,24 +681,26 @@ var WindowPreview = GObject.registerClass({
             global.stage.get_grab_actor() === this._closeButton)
             return super.vfunc_leave_event(crossingEvent);
 
-        if (this._idleHideOverlayId > 0)
-            GLib.source_remove(this._idleHideOverlayId);
+        this.hideOverlay(true);
 
-        this._idleHideOverlayId = GLib.timeout_add(
-            GLib.PRIORITY_DEFAULT,
-            WINDOW_OVERLAY_IDLE_HIDE_TIMEOUT, () => {
-                if (this._closeButton['has-pointer'] ||
-                    this._title['has-pointer'])
-                    return GLib.SOURCE_CONTINUE;
+        // if (this._idleHideOverlayId > 0)
+        //     GLib.source_remove(this._idleHideOverlayId);
 
-                if (!this['has-pointer'])
-                    this.hideOverlay(true);
+        // this._idleHideOverlayId = GLib.timeout_add(
+        //     GLib.PRIORITY_DEFAULT,
+        //     WINDOW_OVERLAY_IDLE_HIDE_TIMEOUT, () => {
+        //         if (this._closeButton['has-pointer'] ||
+        //             this._title['has-pointer'])
+        //             return GLib.SOURCE_CONTINUE;
 
-                this._idleHideOverlayId = 0;
-                return GLib.SOURCE_REMOVE;
-            });
+        //         if (!this['has-pointer'])
+        //             this.hideOverlay(true);
 
-        GLib.Source.set_name_by_id(this._idleHideOverlayId, '[gnome-shell] this._idleHideOverlayId');
+        //         this._idleHideOverlayId = 0;
+        //         return GLib.SOURCE_REMOVE;
+        //     });
+
+        // GLib.Source.set_name_by_id(this._idleHideOverlayId, '[gnome-shell] this._idleHideOverlayId');
 
         return super.vfunc_leave_event(crossingEvent);
     }
