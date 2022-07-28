@@ -2086,7 +2086,7 @@ class AppViewItem extends St.Button {
             scale_y: 0.5,
             */
             opacity: 0,
-            duration: 30
+            duration: 1
         });
     }
 
