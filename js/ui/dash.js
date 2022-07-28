@@ -11,8 +11,8 @@ const Main = imports.ui.main;
 const Overview = imports.ui.overview;
 
 var DASH_ANIMATION_TIME = 200;
-var DASH_ITEM_LABEL_SHOW_TIME = 30;
-var DASH_ITEM_LABEL_HIDE_TIME = 60;
+var DASH_ITEM_LABEL_SHOW_TIME = 60;
+var DASH_ITEM_LABEL_HIDE_TIME = 120;
 
 function getAppFromSource(source) {
     if (source instanceof AppDisplay.AppIcon)
