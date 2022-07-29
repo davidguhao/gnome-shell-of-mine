@@ -23,17 +23,41 @@ function getAppFromSource(source) {
 
 var DashIcon = GObject.registerClass(
 class DashIcon extends AppDisplay.AppIcon {
-    _init(app) {
+    _init(container, app) {
         super._init(app, {
             setSizeManually: true,
             showLabel: false,
         });
+
+        this.container = container;
     }
 
     popupMenu() {
         super.popupMenu(St.Side.BOTTOM);
     }
+    /**
+     * Override the original behavior here - we will make it shrink to nothing.
+     */
+    _onDragBegin() {
+        super._onDragBegin();
 
+        this.container.ease({
+            scale_x: 0,
+            scale_y: 0,
+                opacity: 0,
+                duration: DASH_ANIMATION_TIME
+            });
+    }
+    _onDragEnd() {
+        this.container.ease({
+            scale_x: 1,
+            scale_y: 1,
+            opacity: 255,
+            duration: DASH_ANIMATION_TIME
+        });
+
+        super._onDragEnd();
+    }
 });
 
 // A container like StBin, but taking the child's scale into account
@@ -154,21 +178,6 @@ class DashItemContainer extends St.Widget {
             mode: Clutter.AnimationMode.EASE_OUT_QUAD,
         });
     }
-    /**
-     * With animation for sure
-     */
-    hide() {
-        this.ease({
-            scale_x: 0,
-            scale_y: 0,
-            opacity: 255,
-            duration: DASH_ANIMATION_TIME,
-            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-            onComplete: () => {
-                this.destroy();
-            }
-        });
-    }
 
     animateOutAndDestroy() {
         this.label.hide();
@@ -279,6 +288,25 @@ class DragPlaceholderItem extends DashItemContainer {
     _init() {
         super._init();
         this.setChild(new St.Bin({ style_class: 'placeholder' }));
+    }
+
+    /**
+     * With animation for sure
+     */
+     hide(callback) {
+        this.ease({
+            scale_x: 0,
+            scale_y: 0,
+            opacity: 0,
+            duration: DASH_ANIMATION_TIME * 2,
+            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            onComplete: () => {
+                if(callback) callback();
+                
+                this.destroy();
+
+            }
+        });
     }
 });
 
@@ -496,15 +524,15 @@ var Dash = GObject.registerClass({
     }
 
     _createAppItem(app) {
-        let appIcon = new DashIcon(app);
+        let item = new DashItemContainer();
+        let appIcon = new DashIcon(item, app);
+        item.setChild(appIcon);
 
         appIcon.connect('menu-state-changed',
                         (o, opened) => {
                             this._itemMenuStateChanged(item, opened);
                         });
 
-        let item = new DashItemContainer();
-        item.setChild(appIcon);
 
         // Override default AppIcon label_actor, now the
         // accessible_name is set at DashItemContainer.setLabelText
@@ -807,7 +835,6 @@ var Dash = GObject.registerClass({
             this._emptyDropTarget = null;
         }
     }
-
     handleDragOver(source, actor, x, _y, _time) {
         let app = getAppFromSource(source);
 
@@ -841,38 +868,47 @@ var Dash = GObject.registerClass({
             numChildren--;
         }
 
+        let softPosition;
         let pos;
-        if (this._emptyDropTarget)
+        if (this._emptyDropTarget) {
             pos = 0; // always insert at the start when dash is empty
-        else if (this.text_direction === Clutter.TextDirection.RTL)
+            softPosition = 0;
+        } else if (this.text_direction === Clutter.TextDirection.RTL) {
             pos = numChildren - Math.round(x * numChildren / boxWidth);
-        else
+            softPosition = numChildren - x * numChildren / boxWidth;
+        } else {
             pos = Math.round(x * numChildren / boxWidth);
+            softPosition = x * numChildren / boxWidth;
+        }
+        console.log("softPosition : " + softPosition);
 
         // Put the placeholder after the last favorite if we are not
         // in the favorites zone
         if (pos > numFavorites)
             pos = numFavorites;
+        if(softPosition > numFavorites) softPosition = numFavorites;
+    
+        let shouldChangePosition = pos !== this._dragPlaceholderPos &&
+            this._animatingPlaceholdersCount === 0 && !this.isLastPositionChangeAnimating;
 
-        if (pos !== this._dragPlaceholderPos && this._animatingPlaceholdersCount === 0) {
+        if (shouldChangePosition) {
+            console.log("pos change -> " + this._dragPlaceholderPos + " -> " + pos);
             this._dragPlaceholderPos = pos;
 
             // Don't allow positioning before or after self
-            if (favPos != -1 && (pos == favPos || pos == favPos + 1)) {
-                this._clearDragPlaceholder();
-                return DND.DragMotionResult.CONTINUE;
+            // if (favPos != -1 && (pos == favPos || pos == favPos + 1)) {
+            //     this._clearDragPlaceholder();
+            //     return DND.DragMotionResult.CONTINUE;
+            // }
+
+            if(this._dragPlaceholder) {
+                this.isLastPositionChangeAnimating = true;
+                this._dragPlaceholder.hide(() => {
+                    this.isLastPositionChangeAnimating = false;
+                });
             }
-
-            if(this._dragPlaceholder)
-                this._dragPlaceholder.hide();
-
-            this._dragPlaceholder = new DragPlaceholderItem();
-
-            this._dragPlaceholder.child.set_width(this.iconSize);
-            this._dragPlaceholder.child.set_height(this.iconSize / 2);
-            this._box.insert_child_at_index(this._dragPlaceholder,
-                                            this._dragPlaceholderPos);
-            this._dragPlaceholder.show(true); // here
+            this.generateDragPlaceHolderAndShow();
+    
         }
 
         if (!this._dragPlaceholder)
@@ -884,6 +920,14 @@ var Dash = GObject.registerClass({
             return DND.DragMotionResult.MOVE_DROP;
 
         return DND.DragMotionResult.COPY_DROP;
+    }
+
+    generateDragPlaceHolderAndShow() {
+        this._dragPlaceholder = new DragPlaceholderItem();
+        this._dragPlaceholder.child.set_width(this.iconSize);
+        this._dragPlaceholder.child.set_height(this.iconSize / 2);
+        this._box.insert_child_at_index(this._dragPlaceholder, this._dragPlaceholderPos);
+        this._dragPlaceholder.show(true);
     }
 
     // Draggable target interface
