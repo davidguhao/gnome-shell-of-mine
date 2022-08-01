@@ -52,12 +52,21 @@ var AppMenu = class AppMenu extends PopupMenu.PopupMenu {
 
         this.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
+        
         this._infoItem = this.addAction(_('App Info'), () => {
+            if(this._app.is_window_backed()) {
+                this.openAppInfoDialog(
+                    "No info available",
+                    "?",
+                    "This app doesn't have correspond .desktop file",
+                    "");
+                return false;
+            }
+
             let appId = this._app.get_id();
             let name = this._app.get_name();
             let description = this._app.get_description();
             let desktopFilePath = this._app.get_desktop_filename();
-
             /*
             console.log("App name Is " + name);
             console.log("App description Is " + description);

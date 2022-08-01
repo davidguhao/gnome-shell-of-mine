@@ -57,8 +57,10 @@ class AppInfoDialog extends ModalDialog.ModalDialog {
         this.desktopFilePath = desktopFilePath;
 
         let title = name + " (" + id + ")";
-        let descriptionInContent = (description ? description + "\n\n" : "") +
-            "<DESKTOP FILE PATH>\n" + desktopFilePath;
+        let descriptionInContent = (description ? description + "\n\n" : "");
+
+        if(desktopFilePath && desktopFilePath.length > 0)
+            descriptionInContent += desktopFilePath;
 
         let content = new Dialog.MessageDialogContent({ title, description: descriptionInContent });
         this.contentLayout.add_child(content);
