@@ -111,9 +111,11 @@ class DashItemContainer extends St.Widget {
                                                 natWidth * this.scale_x);
     }
 
-    showLabel() {
+    showLabel(forceShow) {
         if (!this._labelText)
             return;
+
+        if(!forceShow && this._labelText === this.label.get_text()) return;
 
         this.label.set_text(this._labelText);
         this.label.opacity = 0;
@@ -263,7 +265,7 @@ class ShowAppsIcon extends DashItemContainer {
     handleDragOver(source, _actor, _x, _y, _time) {
         if (!this._canRemoveApp(getAppFromSource(source)))
             return DND.DragMotionResult.NO_DROP;
-
+        
         return DND.DragMotionResult.MOVE_DROP;
     }
 
@@ -468,9 +470,10 @@ var Dash = GObject.registerClass({
         if (!this._box.contains(dragEvent.targetActor) || showAppsHovered)
             this._clearDragPlaceholder();
 
-        if (showAppsHovered)
+        if (showAppsHovered) {
             this._showAppsIcon.setDragApp(app);
-        else
+            this._showAppsIcon.showLabel(false);
+        } else
             this._showAppsIcon.setDragApp(null);
 
         return DND.DragMotionResult.CONTINUE;
@@ -554,8 +557,8 @@ var Dash = GObject.registerClass({
 
     _syncLabel(item, appIcon) {
         let shouldShow = appIcon ? appIcon.shouldShowTooltip() : item.child.get_hover();
-
-        if (shouldShow) item.showLabel();
+        
+        if (shouldShow) item.showLabel(true);
         else item.hideLabel();
     }
 
@@ -880,7 +883,7 @@ var Dash = GObject.registerClass({
             pos = Math.round(x * numChildren / boxWidth);
             softPosition = x * numChildren / boxWidth;
         }
-        console.log("softPosition : " + softPosition);
+        // console.log("softPosition : " + softPosition);
 
         // Put the placeholder after the last favorite if we are not
         // in the favorites zone
@@ -892,7 +895,7 @@ var Dash = GObject.registerClass({
             this._animatingPlaceholdersCount === 0 && !this.isLastPositionChangeAnimating;
 
         if (shouldChangePosition) {
-            console.log("pos change -> " + this._dragPlaceholderPos + " -> " + pos);
+            // console.log("pos change -> " + this._dragPlaceholderPos + " -> " + pos);
             this._dragPlaceholderPos = pos;
 
             // Don't allow positioning before or after self
@@ -954,6 +957,7 @@ var Dash = GObject.registerClass({
                 children[i] == this._dragPlaceholder)
                 continue;
 
+            if(!children[i].child._delegate) continue;
             let childId = children[i].child._delegate.app.get_id();
             if (childId == id)
                 continue;
