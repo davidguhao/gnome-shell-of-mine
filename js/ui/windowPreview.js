@@ -385,7 +385,7 @@ var WindowPreview = GObject.registerClass({
         const origSize = Math.max(width, height);
         const scale = (origSize + activeExtraSize) / origSize;
 
-        if(!this._closeRequested)
+        if(!this._closeRequested && this.window_container)
             this.window_container.ease({
                 opacity: 255,
                 scale_x: scale,
@@ -427,7 +427,7 @@ var WindowPreview = GObject.registerClass({
 
         this._title.hide();
 
-        if(!this._closeRequested)
+        if(!this._closeRequested && this.window_container)
             this.window_container.ease({
                 opacity: 255,
                 scale_x: 1,
