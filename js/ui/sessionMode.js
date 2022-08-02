@@ -58,8 +58,8 @@ const _modes = {
             : ['polkitAgent'],
         panel: {
             left: [],
-            center: ['dateMenu'],
-            right: ['dwellClick', 'a11y', 'keyboard', 'aggregateMenu'],
+            center: [],
+            right: ['dwellClick', 'a11y', 'keyboard', 'dateMenu', 'aggregateMenu'],
         },
         panelStyle: 'login-screen',
     },
@@ -93,8 +93,8 @@ const _modes = {
         components: USER_SESSION_COMPONENTS,
         panel: {
             left: ['activities', 'appMenu'],
-            center: ['dateMenu'],
-            right: ['screenRecording', 'dwellClick', 'a11y', 'keyboard', 'aggregateMenu'],
+            center: [],
+            right: ['screenRecording', 'dwellClick', 'a11y', 'keyboard', 'dateMenu', 'aggregateMenu'],
         },
     },
 };
