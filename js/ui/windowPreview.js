@@ -231,26 +231,8 @@ var WindowPreview = GObject.registerClass({
                 // < 0.5 means overview control panel is about to be hidden
                 if(currentState < 0.5 && this._closeRequested) {
                     // Close requested while exit during this process. animation has not been finished.
-                    // this.metaWindow.opacity = 0;
-                    // this.metaWindow.delete(global.get_current_time());
-
                     this._deleteAll();
                     this._closeRequested = false;
-
-                    // this.metaWindow.minimize();
-                    // this.metaWindow.kill();
-
-                    /*
-                    let windowActor = this.metaWindow.get_compositor_private();
-                    windowActor.scale_x = 0;
-                    windowActor.scale_y = 0;
-                    windowActor.ease({
-                                    scale_x: 1,
-                                    scale_y: 1,
-                                    duration: WINDOW_CLOSE_ANIMATION_TIME / 2,
-                                    mode: Clutter.AnimationMode.EASE_OUT_QUAD
-                                });
-                                */
                 }
                 this._updateIconScale();
             },

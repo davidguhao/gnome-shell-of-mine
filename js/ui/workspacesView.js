@@ -429,10 +429,13 @@ class WorkspacesView extends WorkspacesViewBase {
         for (let w = 0; w < this._workspaces.length; w++) {
             let workspace = this._workspaces[w];
 
-            if (this._animating || this._gestureActive || !singleFitMode)
+            // Here I don't get why it hides some workspaces. But now I
+            // need all of them to show no matter what sitation it is
+            if (this._animating || this._gestureActive || !singleFitMode || true)
                 workspace.show();
             else
                 workspace.visible = Math.abs(w - active) <= 1;
+            
         }
     }
 
