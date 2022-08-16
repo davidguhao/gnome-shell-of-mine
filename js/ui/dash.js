@@ -911,7 +911,7 @@ var Dash = GObject.registerClass({
                 });
             }
             this.generateDragPlaceHolderAndShow();
-            this._box.set_child_at_index(actor, this._dragPlaceholderPos);
+            this._box.set_child_at_index(actor.container, this._dragPlaceholderPos);
         }
 
         if (!this._dragPlaceholder)
