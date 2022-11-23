@@ -1176,12 +1176,18 @@ var WindowManager = class {
                     this._minimizeWindowDone();
                     return;
                 }
-                xDest = monitor.x;
-                yDest = monitor.y;
+                /**
+                 * When we minimize the window by clicking the button upright of the window,
+                 * we will execute the following code. 
+                 */
+                xDest = actor.x;
+                yDest = actor.y - monitor.height;
+                /*
                 if (Clutter.get_default_text_direction() == Clutter.TextDirection.RTL)
                     xDest += monitor.width;
-                xScale = 0;
-                yScale = 0;
+                */
+                xScale = actor.scale_x;
+                yScale = actor.scale_y;
             }
 
             actor.ease({
@@ -1242,10 +1248,11 @@ var WindowManager = class {
                     this._unminimizeWindowDone();
                     return;
                 }
-                actor.set_position(monitor.x, monitor.y);
-                if (Clutter.get_default_text_direction() == Clutter.TextDirection.RTL)
-                    actor.x += monitor.width;
-                actor.set_scale(0, 0);
+                // actor.set_position(monitor.x, monitor.y);
+                actor.set_position(actor.x, actor.y - monitor.height);
+                // if (Clutter.get_default_text_direction() == Clutter.TextDirection.RTL)
+                //     actor.x += monitor.width;
+                // actor.set_scale(0, 0);
             }
 
             let rect = actor.meta_window.get_buffer_rect();
