@@ -8,7 +8,8 @@ const {
 const DND = imports.ui.dnd;
 const OverviewControls = imports.ui.overviewControls;
 
-var WINDOW_DND_SIZE = 128;
+var WINDOW_DND_SIZE = 64;
+var DRAGGING_WINDOW_OPACITY = 200;
 
 // var WINDOW_OVERLAY_IDLE_HIDE_TIMEOUT = 750;
 var WINDOW_OVERLAY_FADE_TIME = 200;
@@ -16,7 +17,6 @@ var WINDOW_OVERLAY_FADE_TIME = 200;
 var WINDOW_SCALE_TIME = 500;
 var WINDOW_ACTIVE_SIZE_INC = 5; // in each direction
 
-var DRAGGING_WINDOW_OPACITY = 100;
 
 const WINDOW_CLOSE_ANIMATION_TIME = 400;
 
